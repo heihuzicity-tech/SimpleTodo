@@ -1,8 +1,23 @@
 
   {
-      "name": "Modern Todo Board MVP",
-      "version": "0.1.0",
-      "private": true,
+      "name": "zetodo",
+      "version": "1.0.0",
+      "description": "一个功能强大、界面优雅的现代化看板式任务管理工具，支持多项目管理、拖拽排序、智能搜索等功能。基于 React + TypeScript 构建，提供流畅的用户体验。",
+      "keywords": ["todo", "kanban", "task-management", "react", "typescript", "drag-drop", "project-management", "productivity"],
+      "author": {
+          "name": "heihuzicity",
+          "url": "https://www.heihuzicity.com/"
+      },
+      "license": "MIT",
+      "repository": {
+          "type": "git",
+          "url": "https://github.com/heihuzicity-tech/SimpleTodo.git"
+      },
+      "homepage": "https://heihuzicity-todo.figma.site/",
+      "bugs": {
+          "url": "https://github.com/heihuzicity-tech/SimpleTodo/issues"
+      },
+      "private": false,
       "dependencies": {
           "@radix-ui/react-accordion": "^1.2.3",
           "@radix-ui/react-alert-dialog": "^1.1.6",
