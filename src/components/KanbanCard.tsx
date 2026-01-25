@@ -113,7 +113,7 @@ export const KanbanCard = memo(function KanbanCard({
       <Card
         className={cn(
           // 基础样式 - 参考 cc-switch 卡片设计
-          "group relative bg-white border w-full overflow-hidden rounded-xl",
+          "group relative bg-white border w-full overflow-hidden rounded-lg",
           // 过渡动画 - 使用 Tailwind
           "transition-all duration-200 ease-out",
           // 悬停效果
