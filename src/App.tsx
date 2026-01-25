@@ -1,6 +1,8 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { queryClient } from './lib/query/queryClient';
 import { useKanbanStore } from './hooks/useKanbanStore';
 import { useProjectStore } from './hooks/useProjectStore';
 import { useAutoScroll } from './hooks/useAutoScroll';
@@ -36,8 +38,6 @@ export default function App() {
     createColumn,
     updateColumn,
     deleteColumn,
-    resetBoard,
-    fixDataConsistency,
   } = useKanbanStore(currentProjectId);
 
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
@@ -80,14 +80,7 @@ export default function App() {
     setSelectedCard(null);
   }, []);
 
-  // Memoize card counts and sorted columns
-  const cardCounts = useMemo(() => {
-    return board.columns.reduce((counts, column) => {
-      counts[column.id] = board.cards.filter(card => card.columnId === column.id).length;
-      return counts;
-    }, {} as Record<string, number>);
-  }, [board.columns, board.cards]);
-
+  // Memoize sorted columns
   const sortedColumns = useMemo(() => {
     return [...board.columns].sort((a, b) => a.position - b.position);
   }, [board.columns]);
@@ -99,8 +92,9 @@ export default function App() {
   }, [selectedCard, board.columns]);
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-muted/20">
+    <QueryClientProvider client={queryClient}>
+      <DndProvider backend={HTML5Backend}>
+        <div className="min-h-screen bg-muted/20">
         {/* Header */}
         <header className="border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
           <div className="container mx-auto px-4 py-3">
@@ -205,6 +199,7 @@ export default function App() {
 
 
       </div>
-    </DndProvider>
+      </DndProvider>
+    </QueryClientProvider>
   );
 }
