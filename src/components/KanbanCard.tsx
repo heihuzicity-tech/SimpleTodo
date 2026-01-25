@@ -217,16 +217,6 @@ export const KanbanCard = memo(function KanbanCard({
                   </h4>
                 </div>
 
-                {card.description && (
-                  <p className={cn(
-                    "text-sm mb-2 leading-relaxed break-words line-clamp-2",
-                    "transition-all duration-200",
-                    card.completed ? "text-gray-400 line-through" : "text-gray-600"
-                  )}>
-                    {card.description}
-                  </p>
-                )}
-
                 {/* Status Badge and Actions Row */}
                 <div className="flex items-center justify-between mt-2">
                   <span

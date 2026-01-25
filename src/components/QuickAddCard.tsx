@@ -1,9 +1,12 @@
-import { useState } from 'react';
+/**
+ * QuickAddCard 组件 - 优化版
+ * 功能：点击外部自动关闭，展开有动画，收起无动画
+ */
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
 import { Plus, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 
 interface QuickAddCardProps {
   onAdd: (title: string, description?: string) => void;
@@ -11,103 +14,101 @@ interface QuickAddCardProps {
   instanceId?: string;
 }
 
-export function QuickAddCard({ onAdd, placeholder = "输入卡片标题...", instanceId }: QuickAddCardProps) {
+export function QuickAddCard({ onAdd, placeholder = "添加新卡片...", instanceId }: QuickAddCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (title.trim()) {
-      onAdd(title.trim(), description.trim() || undefined);
+      onAdd(title.trim(), undefined);
       setTitle('');
-      setDescription('');
       setIsExpanded(false);
     }
-  };
+  }, [title, onAdd]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setTitle('');
-    setDescription('');
     setIsExpanded(false);
-  };
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
       handleSubmit();
     } else if (e.key === 'Escape') {
       handleCancel();
     }
-  };
+  }, [handleSubmit, handleCancel]);
+
+  // 点击外部关闭
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        handleCancel();
+      }
+    };
+
+    // 使用 mousedown 响应更快
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isExpanded, handleCancel]);
 
   if (!isExpanded) {
     return (
-      <motion.div
-        key={`collapsed-${instanceId}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full h-auto p-2 justify-start",
+          "text-muted-foreground",
+          "border-2 border-dashed border-border",
+          "hover:border-primary/30 hover:bg-primary/5",
+          "transition-all duration-150"
+        )}
+        onClick={() => setIsExpanded(true)}
       >
-        <Button
-          variant="ghost"
-          className="w-full h-auto p-2 justify-start text-muted-foreground border-2 border-dashed border-border hover:border-primary/30 transition-colors"
-          onClick={() => setIsExpanded(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {placeholder}
-        </Button>
-      </motion.div>
+        <Plus className="w-4 h-4 mr-2" />
+        {placeholder}
+      </Button>
     );
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={`expanded-${instanceId}`}
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: 'auto' }}
-        exit={{ opacity: 0, height: 0 }}
-        transition={{ 
-          duration: 0.2,
-          ease: [0.2, 0.8, 0.2, 1],
-        }}
-        className="bg-white border border-border rounded-lg p-2.5 shadow-sm w-full max-w-full overflow-hidden"
-      >
-        <div className="space-y-2.5 w-full max-w-full">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="卡片标题"
-            className="w-full max-w-full"
-            style={{ width: '100%', maxWidth: '100%' }}
-            autoFocus
-          />
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="描述（可选）"
-            className="min-h-[50px] resize-none w-full max-w-full"
-            style={{ width: '100%', maxWidth: '100%' }}
-          />
-          <div className="flex gap-2 w-full max-w-full">
-            <Button 
-              size="sm" 
-              onClick={handleSubmit}
-              disabled={!title.trim()}
-            >
-              添加卡片
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost"
-              onClick={handleCancel}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+    <div
+      ref={containerRef}
+      className={cn(
+        "bg-white border border-border rounded-lg p-2.5 shadow-sm",
+        "animate-in fade-in slide-in-from-top-1 duration-150"
+      )}
+    >
+      <div className="flex gap-2 items-center">
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="输入卡片标题..."
+          className="flex-1 h-8 text-sm"
+          autoFocus
+        />
+        <Button
+          size="sm"
+          onClick={handleSubmit}
+          disabled={!title.trim()}
+          className="h-8 px-3"
+        >
+          添加
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleCancel}
+          className="h-8 w-8 p-0"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   );
 }

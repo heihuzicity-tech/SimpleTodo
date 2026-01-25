@@ -102,9 +102,9 @@ export const KanbanColumn = memo(function KanbanColumn({
         getColumnBackgroundClass(column.backgroundColor)
       )}
       style={{
-        width: '320px',
-        maxWidth: '320px',
-        minWidth: '320px',
+        width: '260px',
+        maxWidth: '260px',
+        minWidth: '260px',
       }}
     >
       {/* Column Header */}
@@ -192,7 +192,7 @@ export const KanbanColumn = memo(function KanbanColumn({
       >
         {/* SortableContext 提供排序上下文 */}
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-2 pb-1">
             {sortedCards.map((card) => (
               <KanbanCard
                 key={card.id}
@@ -221,7 +221,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         )}
 
         {/* Quick Add Card */}
-        <div className={sortedCards.length > 0 ? "mt-3" : "mt-2"}>
+        <div className={sortedCards.length > 0 ? "mt-4" : "mt-2"}>
           <QuickAddCard
             key={`quick-add-${column.id}`}
             instanceId={column.id}

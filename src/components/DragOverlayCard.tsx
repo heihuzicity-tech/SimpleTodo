@@ -24,7 +24,7 @@ export function DragOverlayCard({ card }: DragOverlayCardProps) {
   return (
     <div
       className={cn(
-        "w-[280px]",
+        "w-[240px]",
         // 拖拽效果 - 参考 cc-switch: scale-105 + shadow-lg + cursor-grabbing
         "cursor-grabbing scale-[1.02]"
       )}
@@ -65,12 +65,6 @@ export function DragOverlayCard({ card }: DragOverlayCardProps) {
                 {card.title}
               </h4>
             </div>
-
-            {card.description && (
-              <p className="text-sm leading-relaxed break-words line-clamp-1 text-muted-foreground">
-                {card.description}
-              </p>
-            )}
 
             <div className="flex items-center gap-2 mt-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/10 text-primary animate-pulse">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Utility function to safely parse JSON from localStorage
 function safeJSONParse<T>(value: string, fallback: T): T {
@@ -20,7 +20,6 @@ function readFromLocalStorage<T>(key: string, initialValue: T): T {
     return safeJSONParse(item, initialValue);
   } catch (error) {
     console.error(`Error reading localStorage key "${key}":`, error);
-    // Clear the invalid localStorage item
     try {
       window.localStorage.removeItem(key);
     } catch (clearError) {
@@ -35,32 +34,68 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     return readFromLocalStorage(key, initialValue);
   });
 
-  // Re-read from localStorage when key changes (but not initialValue to avoid reset)
+  // 使用 ref 保存待写入的值，避免频繁写入
+  const pendingWriteRef = useRef<T | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Re-read from localStorage when key changes
   useEffect(() => {
     const newValue = readFromLocalStorage(key, initialValue);
     setStoredValue(newValue);
-  }, [key]); // Remove initialValue dependency
+  }, [key]);
 
-  const setValue = (value: T) => {
+  // 异步批量写入 localStorage
+  const flushToStorage = useCallback((value: T) => {
     try {
-      setStoredValue(value);
-      window.localStorage.setItem(key, JSON.stringify(value));
+      // 使用 requestIdleCallback 或 setTimeout 延迟写入
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        }, { timeout: 100 });
+      } else {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
     }
-  };
+  }, [key]);
 
-  // Clean up any invalid localStorage on mount
-  useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      if (item === 'undefined' || item === 'null') {
-        console.log(`Cleaning up invalid localStorage value for key "${key}"`);
-        window.localStorage.removeItem(key);
-      }
-    } catch (error) {
-      console.error(`Error checking localStorage key "${key}":`, error);
+  const setValue = useCallback((value: T) => {
+    // 立即更新 React state
+    setStoredValue(value);
+
+    // 保存待写入的值
+    pendingWriteRef.current = value;
+
+    // 清除之前的定时器
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
+
+    // 延迟 50ms 写入，合并多次快速更新
+    timeoutRef.current = setTimeout(() => {
+      if (pendingWriteRef.current !== null) {
+        flushToStorage(pendingWriteRef.current);
+        pendingWriteRef.current = null;
+      }
+    }, 50);
+  }, [flushToStorage]);
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      // 组件卸载时立即写入
+      if (pendingWriteRef.current !== null) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(pendingWriteRef.current));
+        } catch (error) {
+          console.error(`Error flushing localStorage key "${key}":`, error);
+        }
+      }
+    };
   }, [key]);
 
   return [storedValue, setValue];

@@ -233,7 +233,7 @@ export default function App() {
                 <div className="flex-shrink-0">
                   <div
                     className={cn(
-                      "w-80 h-[50px] rounded-lg",
+                      "w-[260px] h-[50px] rounded-lg",
                       "border border-dashed border-primary/20",
                       "bg-gradient-to-br from-primary/5 to-primary/10",
                       "hover:from-primary/8 hover:to-primary/15",
@@ -241,7 +241,7 @@ export default function App() {
                       "flex items-center justify-center",
                       "hover:border-primary/30 hover:shadow-sm"
                     )}
-                    style={{ width: '320px' }}
+                    style={{ width: '260px' }}
                     onClick={() => createColumn('新列')}
                   >
                     <div className="flex items-center gap-2 text-primary/70 group-hover:text-primary transition-colors duration-200">
