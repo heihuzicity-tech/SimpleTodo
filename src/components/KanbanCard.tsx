@@ -10,19 +10,20 @@
 import { useState, memo, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card as CardType } from '../types/kanban';
+import { Card as CardType, PRIORITY_CONFIG, PRIORITY_ORDER, Priority } from '../types/kanban';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Edit3, Trash2, MoreHorizontal, GripVertical } from 'lucide-react';
+import { Edit3, Trash2, MoreHorizontal, Flag } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface KanbanCardProps {
   card: CardType;
-  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed'>>) => void;
+  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed' | 'priority'>>) => void;
   onDelete: (cardId: string) => void;
   onClick: (card: CardType) => void;
 }
@@ -126,160 +127,174 @@ export const KanbanCard = memo(function KanbanCard({
           card.completed && "opacity-75 bg-gray-50"
         )}
       >
-        <div className="flex">
-          {/* 拖拽手柄指示器 */}
-          {!isEditing && (
-            <div
-              className={cn(
-                "flex items-center justify-center w-6",
-                "opacity-0 group-hover:opacity-60 hover:!opacity-100",
-                "transition-opacity duration-150",
-                isDragging && "opacity-100"
-              )}
-            >
-              <GripVertical className="w-4 h-4 text-gray-400" />
-            </div>
-          )}
-
-          {/* Checkbox */}
-          {!isEditing && (
-            <div
-              className="flex items-start justify-center px-2 py-2.5"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <Checkbox
-                checked={card.completed || false}
-                onCheckedChange={(checked: boolean) => {
-                  onUpdate(card.id, { completed: !!checked });
-                }}
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                className={cn(
-                  "mt-0.5 flex-shrink-0",
-                  "transition-transform duration-150 hover:scale-110"
-                )}
-              />
-            </div>
-          )}
-
-          {/* Main Content */}
+        {isEditing ? (
+          // 编辑模式
           <div
-            className={cn(
-              "flex-1 px-2 py-2.5 min-w-0",
-              !isEditing && "cursor-pointer hover:bg-gray-50/50",
-              "transition-colors duration-150"
-            )}
-            onClick={handleCardClick}
-            onPointerDown={(e) => {
-              // 如果点击的是内容区域且不是编辑模式，允许拖拽传播
-              // 但如果是想打开详情，则需要阻止
-            }}
+            className="p-3 space-y-2.5 animate-in fade-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
-            {isEditing ? (
-              // 编辑模式
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="卡片标题"
+              className="font-medium w-full"
+              autoFocus
+            />
+            <Textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="描述（可选）"
+              className="min-h-[60px] resize-none w-full"
+            />
+            <div className="flex gap-2 w-full">
+              <Button size="sm" onClick={handleSave} disabled={!editTitle.trim()}>
+                保存
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancel}>
+                取消
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // 显示模式
+          <div className="py-3">
+            {/* 第一行: 复选框 + 标题 + 三点按钮 */}
+            <div className="flex items-start px-4">
+              {/* Checkbox */}
               <div
-                className="space-y-2.5 w-full animate-in fade-in duration-200"
-                onClick={(e) => e.stopPropagation()}
+                className="flex-shrink-0 mr-4"
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                <Input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="卡片标题"
-                  className="font-medium w-full"
-                  autoFocus
+                <Checkbox
+                  checked={card.completed || false}
+                  onCheckedChange={(checked: boolean) => {
+                    onUpdate(card.id, { completed: !!checked });
+                  }}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  className={cn(
+                    "mt-0.5",
+                    "transition-transform duration-150 hover:scale-110"
+                  )}
                 />
-                <Textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="描述（可选）"
-                  className="min-h-[60px] resize-none w-full"
-                />
-                <div className="flex gap-2 w-full">
-                  <Button size="sm" onClick={handleSave} disabled={!editTitle.trim()}>
-                    保存
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancel}>
-                    取消
-                  </Button>
-                </div>
               </div>
-            ) : (
-              // 显示模式
-              <div className="animate-in fade-in duration-150">
-                <div className="mb-1.5">
-                  <h4 className={cn(
-                    "leading-tight break-words transition-all duration-200",
-                    card.completed && "line-through text-gray-500"
-                  )}>
-                    {card.title}
-                  </h4>
-                </div>
 
-                {/* Status Badge and Actions Row */}
-                <div className="flex items-center justify-between mt-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium",
-                      "transition-all duration-200",
-                      card.completed
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    )}
-                  >
-                    {card.completed ? '✓ 已完成' : '进行中'}
-                  </span>
-
-                  {/* Actions Menu - 悬停显示 */}
-                  <div
-                    className={cn(
-                      "transition-opacity duration-150",
-                      "opacity-0 group-hover:opacity-100"
-                    )}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 hover:bg-gray-100"
-                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                          <span className="sr-only">操作菜单</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsEditing(true);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Edit3 className="w-4 h-4 mr-2" />
-                          编辑
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(card.id);
-                          }}
-                          className="cursor-pointer text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          删除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+              {/* 标题 */}
+              <div
+                className="flex-1 min-w-0 cursor-pointer"
+                onClick={handleCardClick}
+              >
+                <h4 className={cn(
+                  "leading-tight break-words transition-all duration-200",
+                  card.completed && "line-through text-gray-500"
+                )}>
+                  {card.title}
+                </h4>
               </div>
-            )}
+
+              {/* 三点菜单按钮 */}
+              <div
+                className="flex-shrink-0 ml-2"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={cn(
+                        "h-7 w-7 p-0 rounded-md",
+                        "bg-gray-100 hover:bg-gray-200",
+                        "opacity-0 group-hover:opacity-100",
+                        "transition-opacity duration-150"
+                      )}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                      <span className="sr-only">操作菜单</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEditing(true);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      编辑
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(card.id);
+                      }}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      删除
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* 第二行: 优先级选择器（与复选框垂直对齐） */}
+            <div
+              className="mt-2 px-4"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs",
+                      "transition-all duration-150 hover:shadow-sm",
+                      PRIORITY_CONFIG[card.priority || 'low'].color,
+                      PRIORITY_CONFIG[card.priority || 'low'].bgColor,
+                      PRIORITY_CONFIG[card.priority || 'low'].borderColor
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Flag className="w-3 h-3" />
+                    {PRIORITY_CONFIG[card.priority || 'low'].label}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-36">
+                  {PRIORITY_ORDER.map((priority) => {
+                    const config = PRIORITY_CONFIG[priority];
+                    const isSelected = (card.priority || 'low') === priority;
+                    return (
+                      <DropdownMenuItem
+                        key={priority}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUpdate(card.id, { priority });
+                        }}
+                        className="cursor-pointer flex items-center justify-between"
+                      >
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded border text-xs",
+                            config.color,
+                            config.bgColor,
+                            config.borderColor
+                          )}
+                        >
+                          {config.label}
+                        </span>
+                        {isSelected && <Check className="w-4 h-4 text-gray-500" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
+        )}
       </Card>
     </div>
   );

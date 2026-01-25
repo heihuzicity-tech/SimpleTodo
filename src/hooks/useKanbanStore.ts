@@ -342,6 +342,7 @@ export function useKanbanStore(projectId: string) {
       description,
       columnId,
       position: maxPosition + 1,
+      priority: 'low',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -367,7 +368,7 @@ export function useKanbanStore(projectId: string) {
     });
   }, [board, setBoard, addActivity]);
 
-  const updateCard = useCallback((cardId: string, updates: Partial<Pick<Card, 'title' | 'description' | 'completed'>>) => {
+  const updateCard = useCallback((cardId: string, updates: Partial<Pick<Card, 'title' | 'description' | 'completed' | 'priority'>>) => {
     const card = board.cards.find(c => c.id === cardId);
     if (!card) return;
 

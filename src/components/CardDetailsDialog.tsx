@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card as CardType, Activity } from '../types/kanban';
+import { Card as CardType, Activity, PRIORITY_CONFIG, PRIORITY_ORDER, Priority } from '../types/kanban';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,13 +8,15 @@ import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
-import { Save, X, Clock, Activity as ActivityIcon, Check } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Save, X, Clock, Activity as ActivityIcon, Check, Flag } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface CardDetailsDialogProps {
   card: CardType | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed'>>) => void;
+  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed' | 'priority'>>) => void;
   onDelete: (cardId: string) => void;
   activities: Activity[];
   columnTitle: string;
@@ -151,13 +153,64 @@ export function CardDetailsDialog({
                         onUpdate(card.id, { completed: !!checked });
                       }}
                     />
-                    <label 
-                      htmlFor="completed" 
+                    <label
+                      htmlFor="completed"
                       className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
                       标记为已完成
                     </label>
                   </div>
+                </div>
+
+                {/* 优先级选择 */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Flag className="w-4 h-4" />
+                    优先级
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded border text-sm",
+                          "transition-all duration-150 hover:shadow-sm",
+                          PRIORITY_CONFIG[card.priority || 'low'].color,
+                          PRIORITY_CONFIG[card.priority || 'low'].bgColor,
+                          PRIORITY_CONFIG[card.priority || 'low'].borderColor
+                        )}
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        {PRIORITY_CONFIG[card.priority || 'low'].label}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-40">
+                      {PRIORITY_ORDER.map((priority) => {
+                        const config = PRIORITY_CONFIG[priority];
+                        const isSelected = (card.priority || 'low') === priority;
+                        return (
+                          <DropdownMenuItem
+                            key={priority}
+                            onClick={() => {
+                              onUpdate(card.id, { priority });
+                            }}
+                            className="cursor-pointer flex items-center justify-between"
+                          >
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded border text-xs",
+                                config.color,
+                                config.bgColor,
+                                config.borderColor
+                              )}
+                            >
+                              {config.label}
+                            </span>
+                            {isSelected && <Check className="w-4 h-4 text-gray-500" />}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
