@@ -176,13 +176,12 @@ export function CardDetailsDialog({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                       <button
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 rounded border text-sm",
-                          "transition-all duration-150 hover:shadow-sm",
-                          PRIORITY_CONFIG[card.priority || 'low'].color,
-                          PRIORITY_CONFIG[card.priority || 'low'].bgColor,
-                          PRIORITY_CONFIG[card.priority || 'low'].borderColor
-                        )}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded border text-sm transition-all duration-150 hover:shadow-sm"
+                        style={{
+                          color: PRIORITY_CONFIG[card.priority || 'low'].textColor,
+                          backgroundColor: PRIORITY_CONFIG[card.priority || 'low'].bgColor,
+                          borderColor: PRIORITY_CONFIG[card.priority || 'low'].borderColor,
+                        }}
                       >
                         {PRIORITY_CONFIG[card.priority || 'low'].label}
                       </button>
@@ -200,12 +199,12 @@ export function CardDetailsDialog({
                             className="cursor-pointer flex items-center justify-between"
                           >
                             <span
-                              className={cn(
-                                "px-2 py-0.5 rounded border text-xs",
-                                config.color,
-                                config.bgColor,
-                                config.borderColor
-                              )}
+                              className="px-2 py-0.5 rounded border text-xs"
+                              style={{
+                                color: config.textColor,
+                                backgroundColor: config.bgColor,
+                                borderColor: config.borderColor,
+                              }}
                             >
                               {config.label}
                             </span>

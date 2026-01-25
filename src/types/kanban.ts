@@ -1,36 +1,36 @@
 // 优先级类型
 export type Priority = 'low' | 'normal' | 'urgent' | 'critical';
 
-// 优先级配置
+// 优先级配置 - 使用具体颜色值确保正确显示
 export const PRIORITY_CONFIG: Record<Priority, {
   label: string;
-  color: string;
+  textColor: string;
   bgColor: string;
   borderColor: string;
 }> = {
   low: {
     label: '较低',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-300',
+    textColor: '#6b7280',      // gray-500
+    bgColor: '#f9fafb',        // gray-50
+    borderColor: '#d1d5db',    // gray-300
   },
   normal: {
     label: '普通',
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
+    textColor: '#3b82f6',      // blue-500
+    bgColor: '#eff6ff',        // blue-50
+    borderColor: '#93c5fd',    // blue-300
   },
   urgent: {
     label: '紧急',
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-300',
+    textColor: '#f97316',      // orange-500
+    bgColor: '#fff7ed',        // orange-50
+    borderColor: '#fdba74',    // orange-300
   },
   critical: {
     label: '非常紧急',
-    color: 'text-red-500',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-300',
+    textColor: '#ef4444',      // red-500
+    bgColor: '#fef2f2',        // red-50
+    borderColor: '#fca5a5',    // red-300
   },
 };
 
