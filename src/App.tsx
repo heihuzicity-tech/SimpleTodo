@@ -59,9 +59,15 @@ export default function App() {
     deleteColumn,
   } = useKanbanStore(currentProjectId);
 
-  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  // 使用 selectedCardId 而不是 selectedCard，确保对话框中的数据始终与 store 同步
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
+
+  // 从 store 中派生 selectedCard，确保数据实时同步
+  const selectedCard = useMemo(() => {
+    return selectedCardId ? board.cards.find(c => c.id === selectedCardId) || null : null;
+  }, [selectedCardId, board.cards]);
 
   // 滚动容器引用
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -153,13 +159,13 @@ export default function App() {
   }, [board.cards, moveCard]);
 
   const handleCardClick = useCallback((card: CardType) => {
-    setSelectedCard(card);
+    setSelectedCardId(card.id);
     setIsCardDialogOpen(true);
   }, []);
 
   const handleCloseCardDialog = useCallback(() => {
     setIsCardDialogOpen(false);
-    setSelectedCard(null);
+    setSelectedCardId(null);
   }, []);
 
   // Memoize sorted columns
