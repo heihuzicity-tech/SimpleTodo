@@ -143,9 +143,13 @@ export function CardDetailsDialog({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">完成状态</label>
-                  <div className="flex items-center space-x-2">
+                {/* 完成状态 - 水平布局 */}
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground w-32 flex-shrink-0">
+                    <Check className="w-4 h-4" />
+                    状态
+                  </label>
+                  <div className="flex items-center space-x-2 ml-4">
                     <Checkbox
                       id="completed"
                       checked={card.completed || false}
@@ -157,29 +161,29 @@ export function CardDetailsDialog({
                       htmlFor="completed"
                       className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
-                      标记为已完成
+                      {card.completed ? '已完成' : '未完成'}
                     </label>
                   </div>
                 </div>
 
-                {/* 优先级选择 */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium">
+                {/* 优先级选择 - 水平布局 */}
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground w-32 flex-shrink-0">
                     <Flag className="w-4 h-4" />
                     优先级
                   </label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <div className="ml-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                       <button
                         className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded border text-sm",
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded border text-sm",
                           "transition-all duration-150 hover:shadow-sm",
                           PRIORITY_CONFIG[card.priority || 'low'].color,
                           PRIORITY_CONFIG[card.priority || 'low'].bgColor,
                           PRIORITY_CONFIG[card.priority || 'low'].borderColor
                         )}
                       >
-                        <Flag className="w-3.5 h-3.5" />
                         {PRIORITY_CONFIG[card.priority || 'low'].label}
                       </button>
                     </DropdownMenuTrigger>
@@ -211,6 +215,7 @@ export function CardDetailsDialog({
                       })}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 </div>
               </div>
 

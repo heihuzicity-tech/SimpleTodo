@@ -165,7 +165,8 @@ export const KanbanCard = memo(function KanbanCard({
             <div className="flex items-start px-4">
               {/* Checkbox */}
               <div
-                className="flex-shrink-0 mr-4"
+                className="flex-shrink-0"
+                style={{ marginRight: '16px' }}
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 <Checkbox
