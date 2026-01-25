@@ -296,30 +296,31 @@ zetodo/
 
 ## 4. 重构阶段规划
 
-### Phase 0: 准备阶段 (1天)
+### Phase 0: 准备阶段 (1天) ✅ 已完成
 > 目标: 搭建基础设施，确保开发环境就绪
 
-- [ ] 创建重构分支 ✅ `feature/tauri-desktop-refactor`
-- [ ] 安装 Tauri CLI 和 Rust 工具链
-- [ ] 初始化 Tauri 项目结构
-- [ ] 配置 Tauri 开发环境
+- [x] 创建重构分支 ✅ `feature/tauri-desktop-refactor`
+- [x] 安装 Tauri CLI 和 Rust 工具链
+- [x] 初始化 Tauri 项目结构
+- [x] 配置 Tauri 开发环境
+- [x] 实现 Rust 后端基础架构 (commands, db, schema)
 - [ ] 验证 `npm run tauri dev` 可正常运行
 
-### Phase 1: 架构重构 (3天)
+### Phase 1: 架构重构 (3天) ✅ 部分完成
 > 目标: 建立四层分离架构，不改变现有功能
 
-#### 1.1 创建 API 封装层 (0.5天)
-- [ ] 创建 `src/lib/api/` 目录
-- [ ] 实现 `kanban.ts` - 暂时使用 LocalStorage 模拟
-- [ ] 实现 `projects.ts`
+#### 1.1 创建 API 封装层 (0.5天) ✅
+- [x] 创建 `src/lib/api/` 目录
+- [x] 实现 `kanban.ts` - 对接 Tauri invoke
+- [x] 实现 `projects.ts`
 - [ ] 实现 `settings.ts`
-- [ ] 统一导出 `index.ts`
+- [x] 统一导出 `index.ts`
 
-#### 1.2 集成 TanStack Query (1天)
-- [ ] 安装 `@tanstack/react-query`
-- [ ] 创建 `src/lib/query/queryClient.ts`
-- [ ] 实现 `queries.ts` - 看板/项目/活动查询
-- [ ] 实现 `mutations.ts` - 卡片/列/项目变更
+#### 1.2 集成 TanStack Query (1天) ✅
+- [x] 安装 `@tanstack/react-query`
+- [x] 创建 `src/lib/query/queryClient.ts`
+- [x] 实现 `queries.ts` - 看板/项目/活动查询
+- [x] 实现 `mutations.ts` - 卡片/列/项目变更
 - [ ] 在 `App.tsx` 中添加 `QueryClientProvider`
 
 #### 1.3 拆分业务 Hooks (1天)
@@ -328,30 +329,30 @@ zetodo/
 - [ ] 创建 `useDragSort.ts`
 - [ ] 移除对 `useLocalStorage` 的直接依赖
 
-#### 1.4 添加 Zod 验证 (0.5天)
-- [ ] 安装 `zod`
-- [ ] 创建 `src/lib/schemas/kanban.ts`
-- [ ] 为 Card, Column, Board 添加 schema
+#### 1.4 添加 Zod 验证 (0.5天) ✅
+- [x] 安装 `zod`
+- [x] 创建 `src/lib/schemas/kanban.ts`
+- [x] 为 Card, Column, Board 添加 schema
 - [ ] 在 API 层添加数据验证
 
-### Phase 2: Tauri 后端开发 (3天)
+### Phase 2: Tauri 后端开发 (3天) ✅ 已完成
 > 目标: 实现 Rust 后端，替换 LocalStorage
 
-#### 2.1 数据库设计 (0.5天)
-- [ ] 设计 SQLite 表结构
-- [ ] 创建 `src-tauri/src/db/schema.rs`
-- [ ] 实现数据库初始化和迁移
+#### 2.1 数据库设计 (0.5天) ✅
+- [x] 设计 SQLite 表结构
+- [x] 创建 `src-tauri/src/db/schema.rs`
+- [x] 实现数据库初始化和迁移
 
-#### 2.2 实现 Tauri Commands (1.5天)
-- [ ] 实现 `get_board` / `save_board`
-- [ ] 实现 `get_projects` / `create_project` / `delete_project`
-- [ ] 实现 `create_card` / `update_card` / `delete_card` / `move_card`
-- [ ] 实现 `create_column` / `update_column` / `delete_column`
+#### 2.2 实现 Tauri Commands (1.5天) ✅
+- [x] 实现 `get_board` / `save_board`
+- [x] 实现 `get_projects` / `create_project` / `delete_project`
+- [x] 实现 `create_card` / `update_card` / `delete_card` / `move_card`
+- [x] 实现 `create_column` / `update_column` / `delete_column`
 - [ ] 实现 `get_activities`
 - [ ] 实现 `get_settings` / `save_settings`
 
-#### 2.3 前端 API 层对接 (1天)
-- [ ] 将 `lib/api/*.ts` 从 LocalStorage 切换到 `invoke()`
+#### 2.3 前端 API 层对接 (1天) ✅
+- [x] 将 `lib/api/*.ts` 从 LocalStorage 切换到 `invoke()`
 - [ ] 添加错误处理和 Toast 通知
 - [ ] 验证所有功能正常工作
 
