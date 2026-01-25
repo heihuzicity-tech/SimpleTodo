@@ -130,11 +130,12 @@ export default function App() {
                 WebkitOverflowScrolling: 'touch', // iOS 流畅滚动
               }}
             >
-              {sortedColumns.map((column) => (
+              {sortedColumns.map((column, index) => (
                 <KanbanColumn
                   key={column.id}
                   column={column}
                   cards={board.cards}
+                  index={index}
                   onCreateCard={createCard}
                   onUpdateCard={updateCard}
                   onDeleteCard={deleteCard}

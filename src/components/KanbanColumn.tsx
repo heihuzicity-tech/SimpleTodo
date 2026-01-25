@@ -1,7 +1,8 @@
 import { useState, useCallback, memo, useMemo } from 'react';
 import { useDrop } from 'react-dnd';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Column, Card as CardType, DragItem } from '../types/kanban';
-import { KanbanCardUltraSimple as KanbanCard } from './KanbanCardUltraSimple';
+import { KanbanCard } from './KanbanCard';
 import { QuickAddCard } from './QuickAddCard';
 import { CardDropZone } from './CardDropZone';
 import { ColumnColorPicker, getColumnBackgroundClass, getCardCountBadgeClass } from './ColumnColorPicker';
@@ -9,11 +10,13 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { MoreHorizontal, Edit3, Trash2 } from 'lucide-react';
+import { columnVariants, listContainerVariants, durations } from '../lib/animations';
 
 
 interface KanbanColumnProps {
   column: Column;
   cards: CardType[];
+  index: number;
   onCreateCard: (columnId: string, title: string, description?: string) => void;
   onUpdateCard: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed'>>) => void;
   onDeleteCard: (cardId: string) => void;
@@ -29,6 +32,7 @@ interface KanbanColumnProps {
 export const KanbanColumn = memo(function KanbanColumn({
   column,
   cards,
+  index,
   onCreateCard,
   onUpdateCard,
   onDeleteCard,
@@ -44,7 +48,6 @@ export const KanbanColumn = memo(function KanbanColumn({
   const [editTitle, setEditTitle] = useState(column.title);
 
   const handleCardDrop = useCallback((item: DragItem, targetColumnId: string, targetPosition: number) => {
-    // 避免无效的移动
     if (item.columnId === targetColumnId) {
       if (item.position === targetPosition || item.position === targetPosition - 1) {
         return;
@@ -53,8 +56,6 @@ export const KanbanColumn = memo(function KanbanColumn({
         targetPosition = targetPosition - 1;
       }
     }
-    
-    // 直接调用，减少延迟
     onMoveCard(item.id, item.columnId, targetColumnId, targetPosition);
   }, [onMoveCard]);
 
@@ -62,10 +63,8 @@ export const KanbanColumn = memo(function KanbanColumn({
     accept: 'card',
     drop: (item: DragItem, monitor) => {
       if (!monitor.didDrop()) {
-        // 默认放到列的最后 - 使用该列的所有卡片数量作为位置
         const allColumnCards = cards.filter(card => card.columnId === column.id);
         const targetPosition = allColumnCards.length;
-        console.log(`🔄 COLUMN FALLBACK: Card ${item.id} -> Column ${column.id} Position ${targetPosition}`);
         handleCardDrop(item, column.id, targetPosition);
       }
     },
@@ -75,13 +74,12 @@ export const KanbanColumn = memo(function KanbanColumn({
     }),
   }), [cards, column.id, handleCardDrop]);
 
-  // Filter and sort cards for this column (memoized)
   const sortedCards = useMemo(() => {
     const columnCards = cards.filter(card => card.columnId === column.id);
-    const filteredCards = filteredCardIds 
+    const filteredCards = filteredCardIds
       ? columnCards.filter(card => filteredCardIds.includes(card.id))
       : columnCards;
-    
+
     return filteredCards.sort((a, b) => a.position - b.position);
   }, [cards, column.id, filteredCardIds]);
 
@@ -110,55 +108,79 @@ export const KanbanColumn = memo(function KanbanColumn({
   }, [handleSaveTitle, handleCancelEdit]);
 
   return (
-    <div
-      className={`flex flex-col rounded-lg overflow-hidden transition-colors duration-200 ${getColumnBackgroundClass(column.backgroundColor)}`}
-      style={{ 
+    <motion.div
+      variants={columnVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ delay: index * 0.1 }}
+      className={`flex flex-col rounded-xl overflow-hidden transition-all duration-300 ${getColumnBackgroundClass(column.backgroundColor)}`}
+      style={{
         width: '320px',
         maxWidth: '320px',
         minWidth: '320px',
-        willChange: 'auto',
-        backfaceVisibility: 'hidden',
-        transform: 'translateZ(0)',
       }}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between px-3 py-[8px] px-[12px] py-[6px]">
-        {isEditingTitle ? (
-          <div className="flex-1 mr-2 min-w-0">
-            <Input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={handleSaveTitle}
-              className="h-7 w-full max-w-full"
-              style={{ width: '100%', maxWidth: '100%' }}
-              autoFocus
-            />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 flex-1">
-            <h3 
-              className="cursor-pointer hover:text-primary transition-colors"
-              onClick={() => setIsEditingTitle(true)}
+      <motion.div
+        className="flex items-center justify-between px-4 py-3"
+        whileHover={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+        transition={{ duration: durations.micro }}
+      >
+        <AnimatePresence mode="wait">
+          {isEditingTitle ? (
+            <motion.div
+              key="editing"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: durations.fast }}
+              className="flex-1 mr-2 min-w-0"
             >
-              {column.title}
-            </h3>
-            <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center transition-all duration-200 ${
-              getCardCountBadgeClass(column.backgroundColor)
-            }`}>
-              {sortedCards.length}
-            </span>
-          </div>
-        )}
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleSaveTitle}
+                className="h-8 w-full font-semibold"
+                autoFocus
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="display"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-2 flex-1"
+            >
+              <motion.h3
+                className="font-semibold cursor-pointer hover:text-primary transition-colors duration-150"
+                onClick={() => setIsEditingTitle(true)}
+                whileHover={{ x: 2 }}
+              >
+                {column.title}
+              </motion.h3>
+              <motion.span
+                className={`text-xs px-2 py-0.5 rounded-full min-w-[22px] text-center font-medium ${getCardCountBadgeClass(column.backgroundColor)}`}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                key={sortedCards.length}
+              >
+                {sortedCards.length}
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <MoreHorizontal className="w-3.5 h-3.5" />
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-black/5">
+                <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
                 <Edit3 className="w-4 h-4 mr-2" />
                 重命名
@@ -179,88 +201,121 @@ export const KanbanColumn = memo(function KanbanColumn({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </motion.div>
 
       {/* Cards Container */}
-      <div
+      <motion.div
         ref={drop}
         className={`
-          px-3 pb-3 transition-colors duration-200 ease-out
-          ${isOver && canDrop ? 'bg-primary/5' : ''}
+          flex-1 px-3 pb-3 transition-all duration-200 ease-out min-h-[100px]
+          ${isOver && canDrop ? 'bg-primary/5 ring-2 ring-inset ring-primary/20' : ''}
         `}
+        animate={{
+          backgroundColor: isOver && canDrop ? 'rgba(var(--primary), 0.05)' : 'transparent',
+        }}
+        transition={{ duration: durations.fast }}
       >
-
-        
-        {/* 第一个位置的放置区域（空列时） */}
-        {sortedCards.length === 0 && (
-          <CardDropZone
-            columnId={column.id}
-            position={0}
-            onDrop={handleCardDrop}
-            isFirst
-            isLast
-          />
-        )}
-
-        {/* 渲染所有卡片 */}
-        {sortedCards.map((card, index) => (
-          <div key={card.id}>
-            {/* 卡片前的放置区域 */}
+        {/* Cards List with stagger animation */}
+        <motion.div
+          variants={listContainerVariants}
+          initial="initial"
+          animate="animate"
+          className="space-y-2"
+        >
+          {/* 第一个位置的放置区域（空列时） */}
+          {sortedCards.length === 0 && (
             <CardDropZone
               columnId={column.id}
-              position={index}
+              position={0}
               onDrop={handleCardDrop}
-              isFirst={index === 0}
+              isFirst
+              isLast
             />
-            
-            <div className="mb-2">
-              <KanbanCard
-                card={card}
-                onUpdate={onUpdateCard}
-                onClick={onCardClick}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-              />
-            </div>
-          </div>
-        ))}
-        
-        {/* 最后一个位置的放置区域（有卡片时） */}
-        {sortedCards.length > 0 && (
-          <CardDropZone
-            columnId={column.id}
-            position={sortedCards.length}
-            onDrop={handleCardDrop}
-            isLast
-          />
-        )}
+          )}
 
-        {/* Quick Add Card - 紧跟在最后一个卡片后面 */}
-        <div className={sortedCards.length > 0 ? "mt-2" : "mt-0"}>
+          {/* 渲染所有卡片 */}
+          <AnimatePresence mode="popLayout">
+            {sortedCards.map((card, cardIndex) => (
+              <motion.div
+                key={card.id}
+                layout
+                layoutId={`card-container-${card.id}`}
+                transition={{
+                  layout: {
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 30,
+                  },
+                }}
+              >
+                {/* 卡片前的放置区域 */}
+                <CardDropZone
+                  columnId={column.id}
+                  position={cardIndex}
+                  onDrop={handleCardDrop}
+                  isFirst={cardIndex === 0}
+                />
+
+                <KanbanCard
+                  card={card}
+                  index={cardIndex}
+                  onUpdate={onUpdateCard}
+                  onDelete={onDeleteCard}
+                  onClick={onCardClick}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* 最后一个位置的放置区域（有卡片时） */}
+          {sortedCards.length > 0 && (
+            <CardDropZone
+              columnId={column.id}
+              position={sortedCards.length}
+              onDrop={handleCardDrop}
+              isLast
+            />
+          )}
+        </motion.div>
+
+        {/* Quick Add Card */}
+        <motion.div
+          className={sortedCards.length > 0 ? "mt-3" : "mt-0"}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: durations.normal }}
+        >
           <QuickAddCard
             key={`quick-add-${column.id}`}
             instanceId={column.id}
             onAdd={(title, description) => onCreateCard(column.id, title, description)}
             placeholder="添加新卡片..."
           />
-        </div>
+        </motion.div>
 
         {/* 空列时的拖拽提示区域 */}
-        {sortedCards.length === 0 && (
-          <div
-            className={`
-              mt-4 min-h-[200px] transition-colors duration-200 ease-out rounded-lg flex items-center justify-center
-              ${isOver && canDrop ? 'bg-primary/8 border-2 border-dashed border-primary/40' : 'border-2 border-dashed border-transparent'}
-            `}
-          >
-            {isOver && canDrop && (
-              <div className="text-primary/70 font-medium animate-in fade-in-50 duration-300">
-                在此处放置第一张卡片
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+        <AnimatePresence>
+          {sortedCards.length === 0 && isOver && canDrop && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: durations.fast }}
+              className="mt-4 min-h-[150px] rounded-xl flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary/30"
+            >
+              <motion.div
+                className="text-primary/70 font-medium"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
+                ↓ 放置卡片到此处
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 });
