@@ -95,7 +95,7 @@ export const KanbanColumn = memo(function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl overflow-hidden",
+        "flex flex-col rounded-xl",
         // 过渡动画 - 使用 Tailwind
         "transition-all duration-300",
         // 列背景色
@@ -105,6 +105,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         width: '260px',
         maxWidth: '260px',
         minWidth: '260px',
+        maxHeight: 'calc(100vh - 140px)',
       }}
     >
       {/* Column Header */}
@@ -184,7 +185,7 @@ export const KanbanColumn = memo(function KanbanColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 px-3 pb-3 min-h-[100px]",
+          "flex-1 px-3 pt-2 pb-1 min-h-[100px] overflow-y-auto",
           // 拖拽悬停状态
           "transition-all duration-200 ease-out",
           isOver && "bg-primary/5 ring-2 ring-inset ring-primary/20"
@@ -220,8 +221,15 @@ export const KanbanColumn = memo(function KanbanColumn({
           </div>
         )}
 
-        {/* Quick Add Card */}
-        <div className={sortedCards.length > 0 ? "mt-4" : "mt-2"}>
+        {/* Quick Add Card - sticky 定位，卡片多时固定在底部 */}
+        <div
+          className={cn(
+            "sticky bottom-0 z-10",
+            // 上下间隙一致，撑满列宽度
+            "py-1 -mx-3",
+            getColumnBackgroundClass(column.backgroundColor)
+          )}
+        >
           <QuickAddCard
             key={`quick-add-${column.id}`}
             instanceId={column.id}

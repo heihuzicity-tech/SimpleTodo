@@ -61,16 +61,17 @@ export function QuickAddCard({ onAdd, placeholder = "添加新卡片...", instan
       <Button
         variant="ghost"
         className={cn(
-          "w-full h-auto p-2 justify-start",
-          "text-muted-foreground",
-          "border-2 border-dashed border-border",
-          "hover:border-primary/30 hover:bg-primary/5",
+          "w-full h-8 justify-center",
+          "text-muted-foreground/50 hover:text-muted-foreground",
+          // 白色长方形，小圆角
+          "bg-white hover:bg-gray-50",
+          "border border-gray-100",
+          "rounded-sm",
           "transition-all duration-150"
         )}
         onClick={() => setIsExpanded(true)}
       >
-        <Plus className="w-4 h-4 mr-2" />
-        {placeholder}
+        <Plus className="w-4 h-4" />
       </Button>
     );
   }
