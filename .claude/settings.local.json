@@ -5,7 +5,17 @@
       "Bash(git add:*)",
       "Bash(git remote:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "mcp__memory__create_entities",
+      "mcp__memory__create_relations",
+      "Bash(git checkout:*)",
+      "Bash(rustc:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx tauri init:*)",
+      "Bash(cargo check:*)"
     ],
     "deny": [],
     "ask": []

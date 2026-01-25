@@ -51,10 +51,15 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
     server: {
-      port: 3000,
-      open: true,
+      port: 5173,
+      strictPort: true,
+      open: false,
+    },
+    // 清除 console 在生产环境
+    esbuild: {
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     },
   });
