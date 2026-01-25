@@ -173,12 +173,6 @@ export default function App() {
     return [...board.columns].sort((a, b) => a.position - b.position);
   }, [board.columns]);
 
-  const selectedCardColumn = useMemo(() => {
-    return selectedCard
-      ? board.columns.find(col => col.id === selectedCard.columnId)
-      : null;
-  }, [selectedCard, board.columns]);
-
   return (
     <QueryClientProvider client={queryClient}>
       <DndContext
@@ -287,8 +281,6 @@ export default function App() {
             onClose={handleCloseCardDialog}
             onUpdate={updateCard}
             onDelete={deleteCard}
-            activities={activities}
-            columnTitle={selectedCardColumn?.title || ''}
           />
 
           {/* Toast Notifications */}
