@@ -1,0 +1,422 @@
+{
+  "designSystem": {
+    "name": "CC-Switch Design System",
+    "version": "3.10.2",
+    "sourceRepo": "https://github.com/farion1231/cc-switch",
+    "analysisDate": "2025-01-25",
+    "designPhilosophy": ["macOS 风格", "Glassmorphism", "微交互动画", "深色模式优先"],
+
+    "techStack": {
+      "desktopFramework": "Tauri 2.8",
+      "frontend": "React 18 + TypeScript",
+      "buildTool": "Vite 7.3",
+      "uiComponents": ["Radix UI", "shadcn/ui"],
+      "styling": "Tailwind CSS 3.4",
+      "stateManagement": "TanStack Query v5",
+      "animation": "Framer Motion",
+      "dragDrop": "@dnd-kit",
+      "formValidation": ["Zod", "react-hook-form"],
+      "i18n": "react-i18next"
+    },
+
+    "colorSystem": {
+      "mode": ["light", "dark", "system"],
+      "implementation": "CSS Variables + Tailwind",
+      "light": {
+        "background": "hsl(0 0% 100%)",
+        "foreground": "hsl(240 10% 3.9%)",
+        "card": "hsl(0 0% 100%)",
+        "primary": "hsl(210 100% 56%)",
+        "secondary": "hsl(240 4.8% 95.9%)",
+        "muted": "hsl(240 4.8% 95.9%)",
+        "mutedForeground": "hsl(240 3.8% 46.1%)",
+        "destructive": "hsl(0 84.2% 60.2%)",
+        "border": "hsl(240 5.9% 90%)",
+        "ring": "hsl(210 100% 56%)"
+      },
+      "dark": {
+        "background": "hsl(240 5% 12%)",
+        "foreground": "hsl(0 0% 98%)",
+        "card": "hsl(240 5% 16%)",
+        "primary": "hsl(210 100% 54%)",
+        "secondary": "hsl(240 5% 18%)",
+        "muted": "hsl(240 5% 18%)",
+        "mutedForeground": "hsl(240 5% 64.9%)",
+        "destructive": "hsl(0 62.8% 30.6%)",
+        "border": "hsl(240 5% 24%)",
+        "ring": "hsl(210 100% 54%)"
+      },
+      "semanticColors": {
+        "blue": {
+          "400": "#409CFF",
+          "500": "#0A84FF",
+          "600": "#0060DF",
+          "usage": ["主色调", "链接", "激活状态"]
+        },
+        "emerald": {
+          "500": "#10b981",
+          "600": "#059669",
+          "usage": ["MCP功能", "代理模式", "成功状态"]
+        },
+        "red": {
+          "500": "#ef4444",
+          "600": "#dc2626",
+          "usage": ["危险操作", "删除", "错误状态"]
+        },
+        "amber": {
+          "500": "#f59e0b",
+          "usage": ["警告状态"]
+        }
+      }
+    },
+
+    "typography": {
+      "fontFamily": {
+        "sans": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        "mono": ["ui-monospace", "SFMono-Regular", "SF Mono", "Consolas", "Liberation Mono", "Menlo", "monospace"]
+      },
+      "scale": {
+        "xs": "0.75rem",
+        "sm": "0.875rem",
+        "base": "1rem",
+        "lg": "1.125rem",
+        "xl": "1.25rem",
+        "2xl": "1.5rem"
+      },
+      "lineHeight": 1.5
+    },
+
+    "spacing": {
+      "unit": "0.25rem",
+      "scale": ["0", "1", "2", "3", "4", "5", "6", "8"]
+    },
+
+    "borderRadius": {
+      "sm": "0.375rem",
+      "md": "0.5rem",
+      "lg": "0.75rem",
+      "xl": "0.875rem",
+      "2xl": "1rem",
+      "usage": {
+        "buttons": "lg",
+        "cards": "xl",
+        "dialogs": "lg",
+        "tabs": "xl",
+        "inputs": "md"
+      }
+    },
+
+    "shadows": {
+      "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "activeCard": {
+        "blue": "shadow-sm shadow-blue-500/10",
+        "emerald": "shadow-sm shadow-emerald-500/10"
+      }
+    }
+  },
+
+  "glassmorphism": {
+    "description": "毛玻璃效果，增加层次感和现代感",
+    "variants": {
+      "glass": {
+        "light": {
+          "background": "rgba(255, 255, 255, 0.7)",
+          "backdropFilter": "blur(10px)",
+          "border": "1px solid rgba(0, 0, 0, 0.1)"
+        },
+        "dark": {
+          "background": "rgba(255, 255, 255, 0.05)",
+          "backdropFilter": "blur(10px)",
+          "border": "1px solid rgba(255, 255, 255, 0.1)"
+        }
+      },
+      "glassCard": {
+        "light": {
+          "background": "rgba(255, 255, 255, 0.8)",
+          "backdropFilter": "blur(20px)",
+          "border": "1px solid rgba(0, 0, 0, 0.1)"
+        },
+        "dark": {
+          "background": "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+          "backdropFilter": "blur(20px)",
+          "border": "1px solid rgba(255, 255, 255, 0.05)",
+          "boxShadow": "0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+        }
+      },
+      "glassCardActive": {
+        "light": {
+          "background": "rgba(59, 130, 246, 0.08)",
+          "border": "1px solid rgba(59, 130, 246, 0.4)"
+        },
+        "dark": {
+          "background": "rgba(59, 130, 246, 0.12)",
+          "border": "1px solid rgba(59, 130, 246, 0.3)"
+        }
+      }
+    },
+    "usage": ["搜索面板", "弹窗遮罩", "激活卡片"]
+  },
+
+  "animations": {
+    "library": ["Framer Motion", "Tailwind CSS", "Radix UI"],
+
+    "keyframes": {
+      "fadeIn": {
+        "from": { "opacity": 0 },
+        "to": { "opacity": 1 },
+        "duration": "0.5s",
+        "easing": "ease-out"
+      },
+      "slideUp": {
+        "from": { "transform": "translateY(20px)", "opacity": 0 },
+        "to": { "transform": "translateY(0)", "opacity": 1 },
+        "duration": "0.5s",
+        "easing": "ease-out"
+      },
+      "slideDown": {
+        "from": { "transform": "translateY(-100%)", "opacity": 0 },
+        "to": { "transform": "translateY(0)", "opacity": 1 },
+        "duration": "0.3s",
+        "easing": "ease-out"
+      },
+      "slideInRight": {
+        "from": { "transform": "translateX(100%)", "opacity": 0 },
+        "to": { "transform": "translateX(0)", "opacity": 1 },
+        "duration": "0.3s",
+        "easing": "ease-out"
+      },
+      "accordionDown": {
+        "from": { "height": 0 },
+        "to": { "height": "var(--radix-accordion-content-height)" },
+        "duration": "0.2s",
+        "easing": "ease-out"
+      },
+      "accordionUp": {
+        "from": { "height": "var(--radix-accordion-content-height)" },
+        "to": { "height": 0 },
+        "duration": "0.2s",
+        "easing": "ease-out"
+      }
+    },
+
+    "framerMotionVariants": {
+      "searchPanel": {
+        "initial": { "opacity": 0, "y": -8, "scale": 0.98 },
+        "animate": { "opacity": 1, "y": 0, "scale": 1 },
+        "exit": { "opacity": 0, "y": -8, "scale": 0.98 },
+        "transition": { "duration": 0.18, "ease": "easeOut" }
+      },
+      "listItem": {
+        "initial": { "opacity": 0, "y": 20 },
+        "animate": { "opacity": 1, "y": 0 },
+        "exit": { "opacity": 0, "scale": 0.95 },
+        "transition": { "duration": 0.2 }
+      }
+    },
+
+    "microInteractions": {
+      "buttonHover": {
+        "class": "transition-colors",
+        "effect": "背景色渐变"
+      },
+      "cardHover": {
+        "class": "transition-all duration-300",
+        "effects": ["border-color变化", "shadow增加", "图标scale-105"]
+      },
+      "iconHover": {
+        "class": "group-hover:scale-105 transition-transform duration-300",
+        "effect": "轻微放大"
+      },
+      "dragHandle": {
+        "class": "cursor-grab active:cursor-grabbing",
+        "effect": "拖拽手柄"
+      },
+      "dragCard": {
+        "class": "scale-105 z-10 shadow-lg",
+        "effect": "拖拽时放大+阴影"
+      },
+      "accordionChevron": {
+        "class": "[&[data-state=open]>svg]:rotate-180",
+        "transition": "transition-transform duration-200"
+      },
+      "slideOnHover": {
+        "class": "group-hover:-translate-x-[var(--actions-width)]",
+        "effect": "用量信息向左滑动显示操作按钮",
+        "transition": "transition-transform duration-200"
+      },
+      "fadeInOnHover": {
+        "class": "opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
+        "transition": "transition-all duration-200"
+      }
+    },
+
+    "dragAndDrop": {
+      "library": "@dnd-kit",
+      "sensors": ["PointerSensor", "KeyboardSensor"],
+      "activationConstraint": { "distance": 8 },
+      "strategy": "verticalListSortingStrategy",
+      "feedback": {
+        "dragging": "scale-105 z-10 border-primary shadow-lg",
+        "dropTarget": "border-dashed border-primary/50"
+      }
+    },
+
+    "timingGuidelines": {
+      "microInteraction": { "duration": "150-200ms", "easing": "ease-out" },
+      "transition": { "duration": "200-300ms", "easing": "ease-out" },
+      "entrance": { "duration": "300-500ms", "easing": "ease-out" },
+      "dragDrop": { "duration": "realtime", "easing": null }
+    }
+  },
+
+  "componentPatterns": {
+    "buttonVariants": {
+      "implementation": "class-variance-authority (cva)",
+      "variants": {
+        "default": {
+          "style": "bg-blue-500 text-white hover:bg-blue-600",
+          "usage": "主要操作"
+        },
+        "destructive": {
+          "style": "bg-red-500 text-white hover:bg-red-600",
+          "usage": "危险操作"
+        },
+        "outline": {
+          "style": "border border-border bg-background hover:bg-gray-100",
+          "usage": "次要操作"
+        },
+        "secondary": {
+          "style": "text-gray-500 hover:bg-gray-100",
+          "usage": "辅助操作"
+        },
+        "ghost": {
+          "style": "text-gray-500 hover:text-gray-900 hover:bg-gray-100",
+          "usage": "最小化视觉干扰"
+        },
+        "mcp": {
+          "style": "bg-emerald-500 text-white hover:bg-emerald-600",
+          "usage": "MCP专属操作"
+        },
+        "link": {
+          "style": "text-blue-500 underline-offset-4 hover:underline",
+          "usage": "链接样式"
+        }
+      },
+      "sizes": {
+        "default": "h-9 px-4 py-2",
+        "sm": "h-8 rounded-md px-3 text-xs",
+        "lg": "h-10 rounded-md px-8",
+        "icon": "h-9 w-9 p-1.5"
+      }
+    },
+
+    "cardStates": {
+      "default": {
+        "border": "border-border",
+        "background": "bg-card"
+      },
+      "hover": {
+        "border": "hover:border-border-active",
+        "shadow": "hover:shadow-sm"
+      },
+      "activeNormal": {
+        "border": "border-blue-500/60",
+        "shadow": "shadow-sm shadow-blue-500/10",
+        "gradient": "from-blue-500/10"
+      },
+      "activeProxy": {
+        "border": "border-emerald-500/60",
+        "shadow": "shadow-sm shadow-emerald-500/10",
+        "gradient": "from-emerald-500/10"
+      },
+      "dragging": {
+        "transform": "scale-105",
+        "zIndex": "z-10",
+        "border": "border-primary",
+        "shadow": "shadow-lg"
+      }
+    },
+
+    "dialogPattern": {
+      "overlay": {
+        "background": "bg-black/50",
+        "blur": "backdrop-blur-sm",
+        "animation": "fade-in/fade-out"
+      },
+      "content": {
+        "position": "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+        "maxSize": "max-w-lg max-h-[90vh]",
+        "structure": ["DialogHeader", "DialogContent", "DialogFooter"],
+        "animation": "zoom + slide"
+      },
+      "zIndexLayers": {
+        "base": "z-40",
+        "nested": "z-50",
+        "alert": "z-[60]",
+        "top": "z-[110]"
+      }
+    },
+
+    "tabSwitcher": {
+      "container": "inline-flex bg-muted rounded-xl p-1 gap-1",
+      "tabInactive": "text-muted-foreground hover:text-foreground hover:bg-background/50",
+      "tabActive": "bg-background text-foreground shadow-sm",
+      "transition": "transition-all duration-200"
+    },
+
+    "hoverRevealActions": {
+      "description": "鼠标悬停时显示操作按钮",
+      "container": "group",
+      "content": "group-hover:-translate-x-[var(--actions-width)]",
+      "actions": "absolute right-0 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
+      "transition": "transition-all duration-200"
+    }
+  },
+
+  "architecture": {
+    "layers": [
+      {
+        "name": "UI Components",
+        "path": "components/",
+        "description": "纯展示 + 用户交互"
+      },
+      {
+        "name": "Business Logic",
+        "path": "hooks/",
+        "description": "封装复杂业务操作"
+      },
+      {
+        "name": "Data Management",
+        "path": "lib/query/",
+        "description": "TanStack Query 缓存"
+      },
+      {
+        "name": "API Layer",
+        "path": "lib/api/",
+        "description": "Tauri IPC 封装"
+      }
+    ],
+    "dataFlow": "UI → Hook → Mutation → API → Tauri → Rust → DB/File"
+  },
+
+  "zetodoMigration": {
+    "priority": "high",
+    "recommendations": [
+      "复制 CSS 变量系统",
+      "复制 Tailwind 配置扩展",
+      "添加毛玻璃效果类",
+      "添加 Framer Motion 依赖",
+      "迁移到 @dnd-kit",
+      "添加 ThemeProvider",
+      "添加 TanStack Query",
+      "添加 Tauri API 层"
+    ],
+    "animationPriority": {
+      "high": ["卡片悬停效果", "拖拽反馈动画", "Dialog开关动画"],
+      "medium": ["列表项入场动画", "搜索面板动画", "Tab切换动画"],
+      "low": ["毛玻璃效果", "渐变叠加效果", "悬停显示操作按钮"]
+    }
+  }
+}
