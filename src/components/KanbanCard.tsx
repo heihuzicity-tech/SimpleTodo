@@ -17,13 +17,42 @@ import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Edit3, Trash2, MoreHorizontal, Flag } from 'lucide-react';
+import { Edit3, Trash2, MoreHorizontal, Flag, CalendarIcon } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { format, isToday, isTomorrow, isYesterday } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+
+// 辅助函数：格式化日期显示（今天、明天、昨天等友好格式）
+const formatDateLabel = (date: Date): string => {
+  if (isToday(date)) return '今天';
+  if (isTomorrow(date)) return '明天';
+  if (isYesterday(date)) return '昨天';
+  return format(date, 'MM/dd', { locale: zhCN });
+};
+
+// 辅助函数：判断是否已过期
+const isOverdue = (date: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDate = new Date(date);
+  dueDate.setHours(0, 0, 0, 0);
+  return dueDate < today;
+};
+
+// 辅助函数：判断是否即将到期（3天内）
+const isDueSoon = (date: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDate = new Date(date);
+  dueDate.setHours(0, 0, 0, 0);
+  const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 && diffDays <= 3;
+};
 
 interface KanbanCardProps {
   card: CardType;
-  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed' | 'priority'>>) => void;
+  onUpdate: (cardId: string, updates: Partial<Pick<CardType, 'title' | 'description' | 'completed' | 'priority' | 'startDate' | 'dueDate'>>) => void;
   onDelete: (cardId: string) => void;
   onClick: (card: CardType) => void;
 }
@@ -243,9 +272,9 @@ export const KanbanCard = memo(function KanbanCard({
               </div>
             </div>
 
-            {/* 第二行: 优先级选择器（与复选框垂直对齐） */}
+            {/* 第二行: 优先级和截止时间（与复选框垂直对齐） */}
             <div
-              className="mt-2 px-4"
+              className="mt-2 px-4 flex items-center gap-2 flex-wrap"
               onPointerDown={(e) => e.stopPropagation()}
             >
               <DropdownMenu>
@@ -292,6 +321,29 @@ export const KanbanCard = memo(function KanbanCard({
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* 时间范围显示 - 只有设置了截止时间才显示 */}
+              {card.dueDate && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs",
+                    isOverdue(new Date(card.dueDate))
+                      ? "text-red-600 bg-red-50 border-red-200"
+                      : isDueSoon(new Date(card.dueDate))
+                      ? "text-orange-600 bg-orange-50 border-orange-200"
+                      : "text-gray-600 bg-gray-50 border-gray-200"
+                  )}
+                >
+                  <CalendarIcon className="w-3 h-3" />
+                  {card.startDate && (
+                    <>
+                      {formatDateLabel(new Date(card.startDate))}
+                      <span className="text-gray-400">-</span>
+                    </>
+                  )}
+                  {formatDateLabel(new Date(card.dueDate))}
+                </span>
+              )}
             </div>
           </div>
         )}

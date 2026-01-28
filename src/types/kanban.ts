@@ -45,6 +45,8 @@ export interface Card {
   position: number;
   completed?: boolean;
   priority?: Priority;
+  startDate?: Date;
+  dueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
