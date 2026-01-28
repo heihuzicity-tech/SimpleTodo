@@ -111,14 +111,20 @@ export function ColumnColorPicker({ currentColor, onColorChange }: ColumnColorPi
                 className={`
                   w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all duration-150
                   hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary/50
-                  ${currentColor === preset.value 
-                    ? 'bg-primary/10 text-primary border border-primary/20' 
+                  ${currentColor === preset.value
+                    ? 'bg-primary/10 text-primary border border-primary/20'
                     : 'hover:bg-muted/50'
                   }
                 `}
                 title={`${preset.name} - 点击应用此颜色主题`}
               >
-                <span>{preset.name}</span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-5 h-5 rounded-md border border-gray-200 shadow-sm flex-shrink-0"
+                    style={{ backgroundColor: preset.preview }}
+                  />
+                  <span>{preset.name}</span>
+                </div>
                 {currentColor === preset.value && (
                   <Check className="w-4 h-4" />
                 )}
