@@ -28,12 +28,14 @@ export function CardDetailsDialog({
 }: CardDetailsDialogProps) {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editPriority, setEditPriority] = useState<CardType['priority']>('low');
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (card) {
       setEditTitle(card.title);
       setEditDescription(card.description || '');
+      setEditPriority(card.priority || 'low');
       setHasChanges(false);
     }
   }, [card]);
@@ -42,17 +44,20 @@ export function CardDetailsDialog({
     if (card) {
       const titleChanged = editTitle !== card.title;
       const descriptionChanged = editDescription !== (card.description || '');
-      setHasChanges(titleChanged || descriptionChanged);
+      const priorityChanged = editPriority !== (card.priority || 'low');
+      setHasChanges(titleChanged || descriptionChanged || priorityChanged);
     }
-  }, [editTitle, editDescription, card]);
+  }, [editTitle, editDescription, editPriority, card]);
 
   const handleSave = () => {
     if (card && hasChanges && editTitle.trim()) {
       onUpdate(card.id, {
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
+        priority: editPriority,
       });
       setHasChanges(false);
+      onClose();
     }
   };
 
@@ -114,23 +119,23 @@ export function CardDetailsDialog({
                 <button
                   className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-medium border focus:outline-none"
                   style={{
-                    color: PRIORITY_CONFIG[card.priority || 'low'].textColor,
-                    backgroundColor: PRIORITY_CONFIG[card.priority || 'low'].bgColor,
-                    borderColor: PRIORITY_CONFIG[card.priority || 'low'].borderColor,
+                    color: PRIORITY_CONFIG[editPriority || 'low'].textColor,
+                    backgroundColor: PRIORITY_CONFIG[editPriority || 'low'].bgColor,
+                    borderColor: PRIORITY_CONFIG[editPriority || 'low'].borderColor,
                   }}
                 >
                   <Flag className="w-3 h-3" />
-                  {PRIORITY_CONFIG[card.priority || 'low'].label}
+                  {PRIORITY_CONFIG[editPriority || 'low'].label}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-32">
                 {PRIORITY_ORDER.map((priority) => {
                   const config = PRIORITY_CONFIG[priority];
-                  const isSelected = (card.priority || 'low') === priority;
+                  const isSelected = (editPriority || 'low') === priority;
                   return (
                     <DropdownMenuItem
                       key={priority}
-                      onClick={() => onUpdate(card.id, { priority })}
+                      onClick={() => setEditPriority(priority)}
                       className="cursor-pointer flex items-center justify-between"
                     >
                       <span

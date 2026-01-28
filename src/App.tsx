@@ -34,7 +34,6 @@ import { Card as CardType } from './types/kanban';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
 import { Plus, Kanban } from 'lucide-react';
-import { cn } from './lib/utils';
 
 export default function App() {
   const {
@@ -181,10 +180,10 @@ export default function App() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="min-h-screen bg-muted/20">
+        <div className="h-full flex flex-col bg-muted/20 overflow-hidden">
           {/* Header */}
-          <header className="border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-            <div className="container mx-auto px-4 py-3">
+          <header className="flex-shrink-0 border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+            <div className="px-6 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
@@ -200,16 +199,24 @@ export default function App() {
                     onProjectDelete={deleteProject}
                   />
                 </div>
+                {/* 添加列按钮 */}
+                <button
+                  onClick={() => createColumn('新列')}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm text-gray-500 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>添加列</span>
+                </button>
               </div>
             </div>
           </header>
 
           {/* Main Content */}
-          <main className="container mx-auto px-4 py-4 h-[calc(100vh-80px)]">
+          <main className="flex-1 flex flex-col px-6 py-4 min-h-0">
             {sortedColumns.length > 0 ? (
               <div
                 ref={scrollContainerRef}
-                className="flex gap-6 overflow-x-auto h-full pb-4"
+                className="flex-1 flex gap-6 overflow-x-auto min-h-0"
                 style={{
                   scrollBehavior: 'auto',
                   WebkitOverflowScrolling: 'touch',
@@ -228,34 +235,6 @@ export default function App() {
                     onCardClick={handleCardClick}
                   />
                 ))}
-
-                {/* Add Column Button */}
-                <div className="flex-shrink-0">
-                  <div
-                    className={cn(
-                      "w-[260px] h-[50px] rounded-lg",
-                      "border border-dashed border-primary/20",
-                      "bg-gradient-to-br from-primary/5 to-primary/10",
-                      "hover:from-primary/8 hover:to-primary/15",
-                      "transition-all duration-300 cursor-pointer group",
-                      "flex items-center justify-center",
-                      "hover:border-primary/30 hover:shadow-sm"
-                    )}
-                    style={{ width: '260px' }}
-                    onClick={() => createColumn('新列')}
-                  >
-                    <div className="flex items-center gap-2 text-primary/70 group-hover:text-primary transition-colors duration-200">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full bg-primary/10 group-hover:bg-primary/15",
-                        "flex items-center justify-center",
-                        "transition-all duration-200 group-hover:scale-105"
-                      )}>
-                        <Plus className="w-4 h-4" />
-                      </div>
-                      <span className="font-medium">添加新列</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">

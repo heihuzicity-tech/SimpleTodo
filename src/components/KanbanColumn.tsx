@@ -95,17 +95,16 @@ export const KanbanColumn = memo(function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl",
+        "flex flex-col rounded-xl flex-shrink-0 h-full",
         // 过渡动画 - 使用 Tailwind
         "transition-all duration-300",
         // 列背景色
         getColumnBackgroundClass(column.backgroundColor)
       )}
       style={{
-        width: '260px',
-        maxWidth: '260px',
-        minWidth: '260px',
-        maxHeight: 'calc(100vh - 140px)',
+        width: '280px',
+        maxWidth: '280px',
+        minWidth: '280px',
       }}
     >
       {/* Column Header */}

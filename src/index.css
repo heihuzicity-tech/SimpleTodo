@@ -6328,3 +6328,11 @@ html {
     opacity: 0;
   }
 }
+
+/* 高度链修复 - 确保 flex 布局能正确传递高度 */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
