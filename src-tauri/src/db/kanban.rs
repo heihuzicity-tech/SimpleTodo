@@ -37,7 +37,7 @@ fn get_board_impl(conn: &Connection, project_id: &str) -> Result<Board, DbError>
 
     // 获取所有卡片
     let mut stmt = conn.prepare(
-        "SELECT id, title, description, column_id, position, completed, created_at, updated_at
+        "SELECT id, title, description, column_id, position, completed, priority, start_date, due_date, created_at, updated_at
          FROM cards WHERE project_id = ? ORDER BY position"
     )?;
 
@@ -50,8 +50,11 @@ fn get_board_impl(conn: &Connection, project_id: &str) -> Result<Board, DbError>
             column_id: row.get(3)?,
             position: row.get(4)?,
             completed: completed.map(|c| c == 1),
-            created_at: row.get(6)?,
-            updated_at: row.get(7)?,
+            priority: row.get(6)?,
+            start_date: row.get(7)?,
+            due_date: row.get(8)?,
+            created_at: row.get(9)?,
+            updated_at: row.get(10)?,
         })
     })?;
 
@@ -115,8 +118,8 @@ fn save_board_impl(conn: &Connection, project_id: &str, board: &Board) -> Result
     for card in &board.cards {
         let completed = card.completed.map(|c| if c { 1 } else { 0 });
         conn.execute(
-            "INSERT INTO cards (id, project_id, column_id, title, description, position, completed, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO cards (id, project_id, column_id, title, description, position, completed, priority, start_date, due_date, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             rusqlite::params![
                 card.id,
                 project_id,
@@ -125,6 +128,9 @@ fn save_board_impl(conn: &Connection, project_id: &str, board: &Board) -> Result
                 card.description,
                 card.position,
                 completed,
+                card.priority,
+                card.start_date,
+                card.due_date,
                 card.created_at,
                 card.updated_at,
             ],
@@ -150,8 +156,8 @@ fn create_card_impl(conn: &Connection, project_id: &str, card: &Card) -> Result<
 
     let completed = card.completed.map(|c| if c { 1 } else { 0 });
     conn.execute(
-        "INSERT INTO cards (id, project_id, column_id, title, description, position, completed, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO cards (id, project_id, column_id, title, description, position, completed, priority, start_date, due_date, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rusqlite::params![
             id,
             project_id,
@@ -160,6 +166,9 @@ fn create_card_impl(conn: &Connection, project_id: &str, card: &Card) -> Result<
             card.description,
             card.position,
             completed,
+            card.priority,
+            card.start_date,
+            card.due_date,
             now,
             now,
         ],
@@ -172,6 +181,9 @@ fn create_card_impl(conn: &Connection, project_id: &str, card: &Card) -> Result<
         column_id: card.column_id.clone(),
         position: card.position,
         completed: card.completed,
+        priority: card.priority.clone(),
+        start_date: card.start_date.clone(),
+        due_date: card.due_date.clone(),
         created_at: now.clone(),
         updated_at: now,
     })
@@ -190,7 +202,7 @@ fn update_card_impl(conn: &Connection, card: &Card) -> Result<Card, DbError> {
 
     let completed = card.completed.map(|c| if c { 1 } else { 0 });
     conn.execute(
-        "UPDATE cards SET title = ?, description = ?, column_id = ?, position = ?, completed = ?, updated_at = ?
+        "UPDATE cards SET title = ?, description = ?, column_id = ?, position = ?, completed = ?, priority = ?, start_date = ?, due_date = ?, updated_at = ?
          WHERE id = ?",
         rusqlite::params![
             card.title,
@@ -198,6 +210,9 @@ fn update_card_impl(conn: &Connection, card: &Card) -> Result<Card, DbError> {
             card.column_id,
             card.position,
             completed,
+            card.priority,
+            card.start_date,
+            card.due_date,
             now,
             card.id,
         ],
@@ -210,6 +225,9 @@ fn update_card_impl(conn: &Connection, card: &Card) -> Result<Card, DbError> {
         column_id: card.column_id.clone(),
         position: card.position,
         completed: card.completed,
+        priority: card.priority.clone(),
+        start_date: card.start_date.clone(),
+        due_date: card.due_date.clone(),
         created_at: card.created_at.clone(),
         updated_at: now,
     })

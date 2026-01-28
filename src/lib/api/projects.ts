@@ -8,8 +8,8 @@ function fromBackendProject(data: Record<string, unknown>): Project {
     id: data.id as string,
     name: data.name as string,
     description: data.description as string | undefined,
-    createdAt: new Date(data.created_at as string),
-    updatedAt: new Date(data.updated_at as string),
+    createdAt: new Date(data.createdAt as string),
+    updatedAt: new Date(data.updatedAt as string),
   };
 }
 
@@ -27,8 +27,8 @@ export const projectsApi = {
       id: project.id || '',
       name: project.name,
       description: project.description || null,
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
     const result = await invoke<Record<string, unknown>>('create_project', {
       project: backendProject,
@@ -42,8 +42,8 @@ export const projectsApi = {
       id: project.id,
       name: project.name,
       description: project.description || null,
-      created_at: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
-      updated_at: new Date().toISOString(),
+      createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
+      updatedAt: new Date().toISOString(),
     };
     const result = await invoke<Record<string, unknown>>('update_project', {
       project: backendProject,

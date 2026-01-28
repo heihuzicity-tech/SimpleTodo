@@ -2,17 +2,20 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { Board, Card, Column } from '@/types/kanban';
 
-// 将前端类型转换为后端格式
+// 将前端类型转换为后端格式 (使用 camelCase，匹配 Rust serde rename)
 function toBackendCard(card: Card): Record<string, unknown> {
   return {
     id: card.id,
     title: card.title,
     description: card.description,
-    column_id: card.columnId,
+    columnId: card.columnId,
     position: card.position,
     completed: card.completed,
-    created_at: card.createdAt instanceof Date ? card.createdAt.toISOString() : card.createdAt,
-    updated_at: card.updatedAt instanceof Date ? card.updatedAt.toISOString() : card.updatedAt,
+    priority: card.priority,
+    startDate: card.startDate instanceof Date ? card.startDate.toISOString() : card.startDate,
+    dueDate: card.dueDate instanceof Date ? card.dueDate.toISOString() : card.dueDate,
+    createdAt: card.createdAt instanceof Date ? card.createdAt.toISOString() : card.createdAt,
+    updatedAt: card.updatedAt instanceof Date ? card.updatedAt.toISOString() : card.updatedAt,
   };
 }
 
@@ -21,24 +24,27 @@ function toBackendColumn(column: Column): Record<string, unknown> {
     id: column.id,
     title: column.title,
     position: column.position,
-    card_ids: column.cardIds,
-    background_color: column.backgroundColor,
-    created_at: column.createdAt instanceof Date ? column.createdAt.toISOString() : column.createdAt,
-    updated_at: column.updatedAt instanceof Date ? column.updatedAt.toISOString() : column.updatedAt,
+    cardIds: column.cardIds,
+    backgroundColor: column.backgroundColor,
+    createdAt: column.createdAt instanceof Date ? column.createdAt.toISOString() : column.createdAt,
+    updatedAt: column.updatedAt instanceof Date ? column.updatedAt.toISOString() : column.updatedAt,
   };
 }
 
-// 将后端格式转换为前端类型
+// 将后端格式转换为前端类型 (后端返回 camelCase)
 function fromBackendCard(data: Record<string, unknown>): Card {
   return {
     id: data.id as string,
     title: data.title as string,
     description: data.description as string | undefined,
-    columnId: data.column_id as string,
+    columnId: data.columnId as string,
     position: data.position as number,
     completed: data.completed as boolean | undefined,
-    createdAt: new Date(data.created_at as string),
-    updatedAt: new Date(data.updated_at as string),
+    priority: data.priority as Card['priority'],
+    startDate: data.startDate ? new Date(data.startDate as string) : undefined,
+    dueDate: data.dueDate ? new Date(data.dueDate as string) : undefined,
+    createdAt: new Date(data.createdAt as string),
+    updatedAt: new Date(data.updatedAt as string),
   };
 }
 
@@ -47,10 +53,10 @@ function fromBackendColumn(data: Record<string, unknown>): Column {
     id: data.id as string,
     title: data.title as string,
     position: data.position as number,
-    cardIds: data.card_ids as string[],
-    backgroundColor: data.background_color as string | undefined,
-    createdAt: new Date(data.created_at as string),
-    updatedAt: new Date(data.updated_at as string),
+    cardIds: data.cardIds as string[],
+    backgroundColor: data.backgroundColor as string | undefined,
+    createdAt: new Date(data.createdAt as string),
+    updatedAt: new Date(data.updatedAt as string),
   };
 }
 
@@ -62,8 +68,8 @@ function fromBackendBoard(data: Record<string, unknown>): Board {
     title: data.title as string,
     columns,
     cards,
-    createdAt: new Date(data.created_at as string),
-    updatedAt: new Date(data.updated_at as string),
+    createdAt: new Date(data.createdAt as string),
+    updatedAt: new Date(data.updatedAt as string),
   };
 }
 
@@ -79,7 +85,6 @@ export const kanbanApi = {
   async getBoard(projectId: string): Promise<Board> {
     const result = await invoke<Record<string, unknown>>('get_board', {
       projectId,
-      appHandle: null,
     });
     return fromBackendBoard(result);
   },
@@ -91,8 +96,8 @@ export const kanbanApi = {
       title: board.title,
       columns: board.columns.map(toBackendColumn),
       cards: board.cards.map(toBackendCard),
-      created_at: board.createdAt instanceof Date ? board.createdAt.toISOString() : board.createdAt,
-      updated_at: board.updatedAt instanceof Date ? board.updatedAt.toISOString() : board.updatedAt,
+      createdAt: board.createdAt instanceof Date ? board.createdAt.toISOString() : board.createdAt,
+      updatedAt: board.updatedAt instanceof Date ? board.updatedAt.toISOString() : board.updatedAt,
     };
     await invoke('save_board', { projectId, board: backendBoard });
   },
@@ -104,11 +109,14 @@ export const kanbanApi = {
       id: card.id || '',
       title: card.title,
       description: card.description || null,
-      column_id: card.columnId,
+      columnId: card.columnId,
       position: card.position ?? 0,
       completed: card.completed ?? false,
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
+      priority: card.priority || 'low',
+      startDate: card.startDate instanceof Date ? card.startDate.toISOString() : card.startDate || null,
+      dueDate: card.dueDate instanceof Date ? card.dueDate.toISOString() : card.dueDate || null,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
     const result = await invoke<Record<string, unknown>>('create_card', {
       projectId,
@@ -151,10 +159,10 @@ export const kanbanApi = {
       id: column.id || '',
       title: column.title,
       position: column.position ?? 0,
-      card_ids: column.cardIds || [],
-      background_color: column.backgroundColor || null,
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
+      cardIds: column.cardIds || [],
+      backgroundColor: column.backgroundColor || null,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
     const result = await invoke<Record<string, unknown>>('create_column', {
       projectId,

@@ -33,13 +33,14 @@ import { ProjectSelector } from './components/ProjectSelector';
 import { Card as CardType } from './types/kanban';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
-import { Plus, Kanban } from 'lucide-react';
+import { Plus, Kanban, Loader2 } from 'lucide-react';
 
 export default function App() {
   const {
     projects,
     currentProject,
     currentProjectId,
+    isLoading: isProjectLoading,
     createProject,
     updateProject,
     deleteProject,
@@ -49,6 +50,7 @@ export default function App() {
   const {
     board,
     activities,
+    isLoading: isBoardLoading,
     createCard,
     updateCard,
     deleteCard,
@@ -181,39 +183,46 @@ export default function App() {
         onDragEnd={handleDragEnd}
       >
         <div className="h-full flex flex-col bg-muted/20 overflow-hidden">
-          {/* Header */}
-          <header className="flex-shrink-0 border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-            <div className="px-6 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Kanban className="w-6 h-6 text-primary" />
-                    <h1 className="text-xl font-semibold">我的看板</h1>
+          {/* Header - 只在加载完成且有当前项目时显示 */}
+          {!isProjectLoading && currentProject && (
+            <header className="flex-shrink-0 border-b border-border bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+              <div className="px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Kanban className="w-6 h-6 text-primary" />
+                      <h1 className="text-xl font-semibold">我的看板</h1>
+                    </div>
+                    <ProjectSelector
+                      projects={projects}
+                      currentProject={currentProject}
+                      onProjectSwitch={switchProject}
+                      onProjectCreate={createProject}
+                      onProjectUpdate={updateProject}
+                      onProjectDelete={deleteProject}
+                    />
                   </div>
-                  <ProjectSelector
-                    projects={projects}
-                    currentProject={currentProject}
-                    onProjectSwitch={switchProject}
-                    onProjectCreate={createProject}
-                    onProjectUpdate={updateProject}
-                    onProjectDelete={deleteProject}
-                  />
+                  {/* 添加列按钮 */}
+                  <button
+                    onClick={() => createColumn('新列')}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 text-sm text-gray-500 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>添加列</span>
+                  </button>
                 </div>
-                {/* 添加列按钮 */}
-                <button
-                  onClick={() => createColumn('新列')}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm text-gray-500 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>添加列</span>
-                </button>
               </div>
-            </div>
-          </header>
+            </header>
+          )}
 
           {/* Main Content */}
           <main className="flex-1 flex flex-col px-6 py-4 min-h-0">
-            {sortedColumns.length > 0 ? (
+            {isProjectLoading || isBoardLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+                <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                <p className="text-muted-foreground">加载中...</p>
+              </div>
+            ) : sortedColumns.length > 0 ? (
               <div
                 ref={scrollContainerRef}
                 className="flex-1 flex gap-6 overflow-x-auto min-h-0"

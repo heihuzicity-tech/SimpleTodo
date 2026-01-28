@@ -29,6 +29,9 @@ pub fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
     if current_version < 1 {
         migrate_v1(conn)?;
     }
+    if current_version < 2 {
+        migrate_v2(conn)?;
+    }
 
     Ok(())
 }
@@ -131,5 +134,34 @@ fn migrate_v1(conn: &Connection) -> Result<(), rusqlite::Error> {
     conn.execute("INSERT INTO schema_version (version) VALUES (1)", [])?;
 
     log::info!("Migration V1 completed");
+    Ok(())
+}
+
+/// V2 迁移: 添加 priority, start_date, due_date 字段
+fn migrate_v2(conn: &Connection) -> Result<(), rusqlite::Error> {
+    log::info!("Running migration V2...");
+
+    // 添加 priority 字段
+    conn.execute(
+        "ALTER TABLE cards ADD COLUMN priority TEXT DEFAULT 'low'",
+        [],
+    )?;
+
+    // 添加 start_date 字段
+    conn.execute(
+        "ALTER TABLE cards ADD COLUMN start_date TEXT",
+        [],
+    )?;
+
+    // 添加 due_date 字段
+    conn.execute(
+        "ALTER TABLE cards ADD COLUMN due_date TEXT",
+        [],
+    )?;
+
+    // 更新版本
+    conn.execute("INSERT INTO schema_version (version) VALUES (2)", [])?;
+
+    log::info!("Migration V2 completed");
     Ok(())
 }

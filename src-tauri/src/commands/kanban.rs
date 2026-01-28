@@ -12,6 +12,11 @@ pub struct Card {
     pub column_id: String,
     pub position: i32,
     pub completed: Option<bool>,
+    pub priority: Option<String>,
+    #[serde(rename = "startDate")]
+    pub start_date: Option<String>,
+    #[serde(rename = "dueDate")]
+    pub due_date: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: String,
     #[serde(rename = "updatedAt")]

@@ -1,95 +1,124 @@
-import { useState, useCallback } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useCallback, useEffect } from 'react';
 import { Project } from '../types/kanban';
-
-const defaultProjects: Project[] = [
-  {
-    id: 'personal-notes',
-    name: '个人备忘',
-    description: '个人任务和备忘录',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'work-project',
-    name: '工作项目',
-    description: '工作相关任务管理',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'learning',
-    name: '学习计划',
-    description: '学习和技能提升相关',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+import { projectsApi } from '../lib/api/projects';
 
 export function useProjectStore() {
-  const [projects, setProjects] = useLocalStorage<Project[]>('kanban-projects', defaultProjects);
-  const [currentProjectId, setCurrentProjectId] = useLocalStorage<string>('kanban-current-project', 'personal-notes');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 初始化：从数据库加载项目列表和当前项目
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [projectList, currentId] = await Promise.all([
+          projectsApi.getAll(),
+          projectsApi.getCurrentId(),
+        ]);
+
+        // 如果没有项目，创建一个默认项目
+        if (projectList.length === 0) {
+          const defaultProject = await projectsApi.create({
+            name: '默认项目',
+            description: '这是您的第一个项目',
+          });
+          setProjects([defaultProject]);
+          setCurrentProjectId(defaultProject.id);
+          await projectsApi.setCurrent(defaultProject.id);
+        } else {
+          setProjects(projectList);
+          // 如果没有当前项目，设置第一个项目为当前项目
+          if (currentId && projectList.find(p => p.id === currentId)) {
+            setCurrentProjectId(currentId);
+          } else {
+            setCurrentProjectId(projectList[0].id);
+            await projectsApi.setCurrent(projectList[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const currentProject = projects.find(p => p.id === currentProjectId) || projects[0];
 
-  const createProject = useCallback((name: string, description?: string) => {
-    const newProject: Project = {
-      id: crypto.randomUUID(),
-      name,
-      description,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  const createProject = useCallback(async (name: string, description?: string) => {
+    try {
+      const newProject = await projectsApi.create({ name, description });
+      setProjects(prev => [...prev, newProject]);
+      setCurrentProjectId(newProject.id);
+      await projectsApi.setCurrent(newProject.id);
+      return newProject;
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      throw error;
+    }
+  }, []);
 
-    setProjects(prev => [...prev, newProject]);
-    setCurrentProjectId(newProject.id);
-    return newProject;
-  }, [setProjects, setCurrentProjectId]);
+  const updateProject = useCallback(async (projectId: string, updates: Partial<Pick<Project, 'name' | 'description'>>) => {
+    try {
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
 
-  const updateProject = useCallback((projectId: string, updates: Partial<Pick<Project, 'name' | 'description'>>) => {
-    setProjects(prev => 
-      prev.map(project => 
-        project.id === projectId 
-          ? { ...project, ...updates, updatedAt: new Date() }
-          : project
-      )
-    );
-  }, [setProjects]);
+      const updatedProject = await projectsApi.update({
+        ...project,
+        ...updates,
+        updatedAt: new Date(),
+      });
 
-  const deleteProject = useCallback((projectId: string) => {
+      setProjects(prev =>
+        prev.map(p => p.id === projectId ? updatedProject : p)
+      );
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      throw error;
+    }
+  }, [projects]);
+
+  const deleteProject = useCallback(async (projectId: string) => {
     if (projects.length <= 1) {
       alert('至少需要保留一个项目');
       return false;
     }
 
-    const projectIndex = projects.findIndex(p => p.id === projectId);
-    if (projectIndex === -1) return false;
+    try {
+      await projectsApi.delete(projectId);
 
-    // If deleting current project, switch to another one
-    if (projectId === currentProjectId) {
       const remainingProjects = projects.filter(p => p.id !== projectId);
-      setCurrentProjectId(remainingProjects[0].id);
+      setProjects(remainingProjects);
+
+      // 如果删除的是当前项目，切换到另一个项目
+      if (projectId === currentProjectId) {
+        const newCurrentId = remainingProjects[0].id;
+        setCurrentProjectId(newCurrentId);
+        await projectsApi.setCurrent(newCurrentId);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      return false;
     }
+  }, [projects, currentProjectId]);
 
-    setProjects(prev => prev.filter(p => p.id !== projectId));
-    
-    // Clear the board data for the deleted project
-    localStorage.removeItem(`kanban-board-${projectId}`);
-    localStorage.removeItem(`kanban-activities-${projectId}`);
-    
-    return true;
-  }, [projects, currentProjectId, setProjects, setCurrentProjectId]);
-
-  const switchProject = useCallback((projectId: string) => {
+  const switchProject = useCallback(async (projectId: string) => {
     if (projects.find(p => p.id === projectId)) {
       setCurrentProjectId(projectId);
+      await projectsApi.setCurrent(projectId);
     }
-  }, [projects, setCurrentProjectId]);
+  }, [projects]);
 
   return {
     projects,
     currentProject,
     currentProjectId,
+    isLoading,
     createProject,
     updateProject,
     deleteProject,
