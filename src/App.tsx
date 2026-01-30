@@ -20,6 +20,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  DropAnimation,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
 import { queryClient } from './lib/query/queryClient';
@@ -89,6 +90,12 @@ export default function App() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // @dnd-kit 放置动画配置 - 简洁的淡出效果
+  const dropAnimation: DropAnimation = {
+    duration: 150,
+    easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+  };
 
   // 拖拽开始
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -275,7 +282,7 @@ export default function App() {
           <Toaster position="bottom-right" />
 
           {/* Drag Overlay - @dnd-kit 高性能拖拽预览 */}
-          <DragOverlay>
+          <DragOverlay dropAnimation={dropAnimation}>
             {activeCard && <DragOverlayCard card={activeCard} />}
           </DragOverlay>
         </div>

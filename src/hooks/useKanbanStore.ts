@@ -232,85 +232,90 @@ export function useKanbanStore(projectId: string | null) {
     const targetColumnCards = board.cards.filter(c => c.columnId === toColumnId && c.id !== cardId);
     const finalPosition = Math.max(0, Math.min(newPosition, targetColumnCards.length));
 
+    // 保存旧状态用于回滚
+    const previousBoard = board;
+
+    // 🚀 乐观更新：立即更新本地状态，让 UI 即时响应
+    setBoard(prevBoard => {
+      const updatedCards = prevBoard.cards.map(c => {
+        if (c.id === cardId) {
+          return { ...c, columnId: toColumnId, position: finalPosition, updatedAt: new Date() };
+        }
+
+        // 处理目标列中的其他卡片位置调整
+        if (c.columnId === toColumnId && c.id !== cardId) {
+          if (fromColumnId === toColumnId) {
+            // 同列内移动
+            if (card.position < finalPosition && c.position > card.position && c.position <= finalPosition) {
+              return { ...c, position: c.position - 1, updatedAt: new Date() };
+            }
+            if (card.position > finalPosition && c.position >= finalPosition && c.position < card.position) {
+              return { ...c, position: c.position + 1, updatedAt: new Date() };
+            }
+          } else {
+            // 跨列移动，目标列中位置 >= finalPosition 的卡片后移
+            if (c.position >= finalPosition) {
+              return { ...c, position: c.position + 1, updatedAt: new Date() };
+            }
+          }
+        }
+
+        // 处理源列中的卡片位置调整（仅在跨列移动时）
+        if (fromColumnId !== toColumnId && c.columnId === fromColumnId && c.position > card.position) {
+          return { ...c, position: c.position - 1, updatedAt: new Date() };
+        }
+
+        return c;
+      });
+
+      // 更新列的 cardIds
+      const updatedColumns = prevBoard.columns.map(col => {
+        if (col.id === fromColumnId && fromColumnId !== toColumnId) {
+          return { ...col, cardIds: col.cardIds.filter(id => id !== cardId), updatedAt: new Date() };
+        }
+        if (col.id === toColumnId) {
+          const currentCardIds = col.cardIds.filter(id => id !== cardId);
+          currentCardIds.splice(finalPosition, 0, cardId);
+          return { ...col, cardIds: currentCardIds, updatedAt: new Date() };
+        }
+        return col;
+      });
+
+      return {
+        ...prevBoard,
+        columns: updatedColumns,
+        cards: updatedCards,
+        updatedAt: new Date(),
+      };
+    });
+
+    // 记录活动
+    if (fromColumnId !== toColumnId) {
+      const fromColumn = board.columns.find(col => col.id === fromColumnId);
+      const toColumn = board.columns.find(col => col.id === toColumnId);
+      if (fromColumn && toColumn) {
+        addActivity({
+          type: 'card_moved',
+          cardId,
+          fromColumnId,
+          toColumnId,
+          title: `将卡片"${card.title}"从"${fromColumn.title}"移动到"${toColumn.title}"`,
+        });
+      }
+    }
+
     try {
-      // 调用后端 API
+      // 后台调用 API 持久化
       await kanbanApi.moveCard(projectId, {
         cardId,
         fromColumnId,
         toColumnId,
         newPosition: finalPosition,
       });
-
-      // 更新本地状态
-      setBoard(prevBoard => {
-        const updatedCards = prevBoard.cards.map(c => {
-          if (c.id === cardId) {
-            return { ...c, columnId: toColumnId, position: finalPosition, updatedAt: new Date() };
-          }
-
-          // 处理目标列中的其他卡片位置调整
-          if (c.columnId === toColumnId && c.id !== cardId) {
-            if (fromColumnId === toColumnId) {
-              // 同列内移动
-              if (card.position < finalPosition && c.position > card.position && c.position <= finalPosition) {
-                return { ...c, position: c.position - 1, updatedAt: new Date() };
-              }
-              if (card.position > finalPosition && c.position >= finalPosition && c.position < card.position) {
-                return { ...c, position: c.position + 1, updatedAt: new Date() };
-              }
-            } else {
-              // 跨列移动，目标列中位置 >= finalPosition 的卡片后移
-              if (c.position >= finalPosition) {
-                return { ...c, position: c.position + 1, updatedAt: new Date() };
-              }
-            }
-          }
-
-          // 处理源列中的卡片位置调整（仅在跨列移动时）
-          if (fromColumnId !== toColumnId && c.columnId === fromColumnId && c.position > card.position) {
-            return { ...c, position: c.position - 1, updatedAt: new Date() };
-          }
-
-          return c;
-        });
-
-        // 更新列的 cardIds
-        const updatedColumns = prevBoard.columns.map(col => {
-          if (col.id === fromColumnId && fromColumnId !== toColumnId) {
-            return { ...col, cardIds: col.cardIds.filter(id => id !== cardId), updatedAt: new Date() };
-          }
-          if (col.id === toColumnId) {
-            const currentCardIds = col.cardIds.filter(id => id !== cardId);
-            currentCardIds.splice(finalPosition, 0, cardId);
-            return { ...col, cardIds: currentCardIds, updatedAt: new Date() };
-          }
-          return col;
-        });
-
-        return {
-          ...prevBoard,
-          columns: updatedColumns,
-          cards: updatedCards,
-          updatedAt: new Date(),
-        };
-      });
-
-      // 记录活动
-      if (fromColumnId !== toColumnId) {
-        const fromColumn = board.columns.find(col => col.id === fromColumnId);
-        const toColumn = board.columns.find(col => col.id === toColumnId);
-        if (fromColumn && toColumn) {
-          addActivity({
-            type: 'card_moved',
-            cardId,
-            fromColumnId,
-            toColumnId,
-            title: `将卡片"${card.title}"从"${fromColumn.title}"移动到"${toColumn.title}"`,
-          });
-        }
-      }
     } catch (error) {
       console.error('Failed to move card:', error);
+      // API 失败时回滚到之前的状态
+      setBoard(previousBoard);
     }
   }, [projectId, board, addActivity]);
 

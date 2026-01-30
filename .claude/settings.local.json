@@ -15,7 +15,22 @@
       "Bash(node:*)",
       "Bash(npm:*)",
       "Bash(npx tauri init:*)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cargo build:*)",
+      "Bash(lsof:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "mcp__playwright__browser_console_messages",
+      "mcp__memory__search_nodes",
+      "mcp__memory__read_graph",
+      "Bash(xargs kill -9)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(sqlite3:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []

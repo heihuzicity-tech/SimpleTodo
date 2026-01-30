@@ -11,7 +11,6 @@ import { useState, memo, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card as CardType, PRIORITY_CONFIG, PRIORITY_ORDER, Priority } from '../types/kanban';
-import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
@@ -140,11 +139,12 @@ export const KanbanCard = memo(function KanbanCard({
         !isDragging && !isEditing && "cursor-grab"
       )}
     >
-      <Card
+      {/* 卡片容器 - 使用 div 完全控制样式，避免 Card 组件的 bg-card 干扰 */}
+      <div
         className={cn(
-          // 基础样式 - 参考 cc-switch 卡片设计
-          "group relative bg-white border w-full overflow-hidden rounded-lg",
-          // 过渡动画 - 使用 Tailwind
+          // 基础样式 - 白色背景，完全不透明
+          "group relative bg-white border border-gray-200 w-full overflow-hidden rounded-lg",
+          // 过渡动画
           "transition-all duration-200 ease-out",
           // 悬停效果
           !isDragging && "hover:border-gray-300 hover:shadow-md",
@@ -152,8 +152,8 @@ export const KanbanCard = memo(function KanbanCard({
           isDragging && "border-primary/50 ring-2 ring-primary/20 shadow-xl",
           // 编辑状态
           isEditing && "ring-2 ring-primary",
-          // 完成状态
-          card.completed && "opacity-75 bg-gray-50"
+          // 完成状态 - 浅灰背景
+          card.completed && "bg-gray-50 border-gray-200"
         )}
       >
         {isEditing ? (
@@ -347,7 +347,7 @@ export const KanbanCard = memo(function KanbanCard({
             </div>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 });
