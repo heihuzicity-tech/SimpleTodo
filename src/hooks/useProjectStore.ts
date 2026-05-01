@@ -107,6 +107,37 @@ export function useProjectStore() {
     }
   }, [projects, currentProjectId]);
 
+  const reorderProjects = useCallback(async (projectIds: string[]) => {
+    if (projectIds.length !== projects.length) {
+      return;
+    }
+
+    const projectMap = new Map(projects.map(project => [project.id, project]));
+    const reorderedProjects = projectIds
+      .map(projectId => projectMap.get(projectId))
+      .filter((project): project is Project => Boolean(project));
+
+    if (reorderedProjects.length !== projects.length) {
+      return;
+    }
+
+    const optimisticProjects = reorderedProjects.map((project, index) => ({
+      ...project,
+      position: index,
+      updatedAt: new Date(),
+    }));
+
+    setProjects(optimisticProjects);
+
+    try {
+      const savedProjects = await projectsApi.reorder(projectIds);
+      setProjects(savedProjects);
+    } catch (error) {
+      console.error('Failed to reorder projects:', error);
+      setProjects(projects);
+    }
+  }, [projects]);
+
   const switchProject = useCallback(async (projectId: string) => {
     if (projects.find(p => p.id === projectId)) {
       setCurrentProjectId(projectId);
@@ -122,6 +153,7 @@ export function useProjectStore() {
     createProject,
     updateProject,
     deleteProject,
+    reorderProjects,
     switchProject,
   };
 }

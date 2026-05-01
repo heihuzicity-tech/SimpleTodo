@@ -7,7 +7,7 @@ const generateEmptyBoard = (projectId: string): Board => {
   const now = new Date();
   return {
     id: projectId,
-    title: '我的看板',
+    title: '船长待办',
     columns: [],
     cards: [],
     createdAt: now,

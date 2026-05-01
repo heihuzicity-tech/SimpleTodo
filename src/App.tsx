@@ -45,6 +45,7 @@ export default function App() {
     createProject,
     updateProject,
     deleteProject,
+    reorderProjects,
     switchProject,
   } = useProjectStore();
 
@@ -198,7 +199,7 @@ export default function App() {
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <Kanban className="w-6 h-6 text-primary" />
-                      <h1 className="text-xl font-semibold">我的看板</h1>
+                      <h1 className="text-xl font-semibold">船长待办</h1>
                     </div>
                     <ProjectSelector
                       projects={projects}
@@ -207,6 +208,7 @@ export default function App() {
                       onProjectCreate={createProject}
                       onProjectUpdate={updateProject}
                       onProjectDelete={deleteProject}
+                      onProjectReorder={reorderProjects}
                     />
                   </div>
                   {/* 添加列按钮 */}

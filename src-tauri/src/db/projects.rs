@@ -10,7 +10,7 @@ use uuid::Uuid;
 pub fn get_all_projects(app_handle: &AppHandle) -> Result<Vec<Project>, DbError> {
     with_connection(app_handle, |conn| {
         let mut stmt = conn.prepare(
-            "SELECT id, name, description, created_at, updated_at FROM projects ORDER BY created_at DESC"
+            "SELECT id, name, description, position, created_at, updated_at FROM projects ORDER BY position ASC, created_at DESC"
         )?;
 
         let projects_iter = stmt.query_map([], |row| {
@@ -18,8 +18,9 @@ pub fn get_all_projects(app_handle: &AppHandle) -> Result<Vec<Project>, DbError>
                 id: row.get(0)?,
                 name: row.get(1)?,
                 description: row.get(2)?,
-                created_at: row.get(3)?,
-                updated_at: row.get(4)?,
+                position: row.get(3)?,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
             })
         })?;
 
@@ -31,18 +32,25 @@ pub fn get_all_projects(app_handle: &AppHandle) -> Result<Vec<Project>, DbError>
 /// 创建项目
 pub fn create_project(app_handle: &AppHandle, project: &Project) -> Result<Project, DbError> {
     let p = project.clone();
-    with_connection(app_handle, |conn| {
-        create_project_impl(conn, &p)
-    })
+    with_connection(app_handle, |conn| create_project_impl(conn, &p))
 }
 
 fn create_project_impl(conn: &Connection, project: &Project) -> Result<Project, DbError> {
     let now = Utc::now().to_rfc3339();
-    let id = if project.id.is_empty() { Uuid::new_v4().to_string() } else { project.id.clone() };
+    let id = if project.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        project.id.clone()
+    };
+    let position = conn.query_row(
+        "SELECT COALESCE(MAX(position), -1) + 1 FROM projects",
+        [],
+        |row| row.get::<_, i32>(0),
+    )?;
 
     conn.execute(
-        "INSERT INTO projects (id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-        rusqlite::params![id, project.name, project.description, now, now],
+        "INSERT INTO projects (id, name, description, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+        rusqlite::params![id, project.name, project.description, position, now, now],
     )?;
 
     // 为新项目创建默认列
@@ -52,6 +60,7 @@ fn create_project_impl(conn: &Connection, project: &Project) -> Result<Project, 
         id,
         name: project.name.clone(),
         description: project.description.clone(),
+        position,
         created_at: now.clone(),
         updated_at: now,
     })
@@ -84,14 +93,15 @@ pub fn update_project(app_handle: &AppHandle, project: &Project) -> Result<Proje
         let now = Utc::now().to_rfc3339();
 
         conn.execute(
-            "UPDATE projects SET name = ?, description = ?, updated_at = ? WHERE id = ?",
-            rusqlite::params![p.name, p.description, now, p.id],
+            "UPDATE projects SET name = ?, description = ?, position = ?, updated_at = ? WHERE id = ?",
+            rusqlite::params![p.name, p.description, p.position, now, p.id],
         )?;
 
         Ok(Project {
             id: p.id.clone(),
             name: p.name.clone(),
             description: p.description.clone(),
+            position: p.position,
             created_at: p.created_at.clone(),
             updated_at: now,
         })
@@ -111,15 +121,37 @@ pub fn delete_project(app_handle: &AppHandle, project_id: &str) -> Result<(), Db
             conn.execute("DELETE FROM settings WHERE key = 'current_project_id'", [])?;
         }
 
+        normalize_project_positions(conn)?;
+
         Ok(())
+    })
+}
+
+/// 按传入 ID 顺序保存项目排序
+pub fn reorder_projects(
+    app_handle: &AppHandle,
+    project_ids: &[String],
+) -> Result<Vec<Project>, DbError> {
+    let ids = project_ids.to_vec();
+    with_connection(app_handle, |conn| {
+        let now = Utc::now().to_rfc3339();
+
+        conn.execute("BEGIN TRANSACTION", [])?;
+        for (position, project_id) in ids.iter().enumerate() {
+            conn.execute(
+                "UPDATE projects SET position = ?, updated_at = ? WHERE id = ?",
+                rusqlite::params![position as i32, now, project_id],
+            )?;
+        }
+        conn.execute("COMMIT", [])?;
+
+        get_all_projects_impl(conn)
     })
 }
 
 /// 获取当前项目ID
 pub fn get_current_project(app_handle: &AppHandle) -> Result<Option<String>, DbError> {
-    with_connection(app_handle, |conn| {
-        get_current_project_impl(conn)
-    })
+    with_connection(app_handle, |conn| get_current_project_impl(conn))
 }
 
 fn get_current_project_impl(conn: &Connection) -> Result<Option<String>, DbError> {
@@ -134,6 +166,40 @@ fn get_current_project_impl(conn: &Connection) -> Result<Option<String>, DbError
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(DbError::from(e)),
     }
+}
+
+fn get_all_projects_impl(conn: &Connection) -> Result<Vec<Project>, DbError> {
+    let mut stmt = conn.prepare(
+        "SELECT id, name, description, position, created_at, updated_at FROM projects ORDER BY position ASC, created_at DESC"
+    )?;
+
+    let projects_iter = stmt.query_map([], |row| {
+        Ok(Project {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+            position: row.get(3)?,
+            created_at: row.get(4)?,
+            updated_at: row.get(5)?,
+        })
+    })?;
+
+    let projects: Vec<Project> = projects_iter.filter_map(|p| p.ok()).collect();
+    Ok(projects)
+}
+
+fn normalize_project_positions(conn: &Connection) -> Result<(), DbError> {
+    let projects = get_all_projects_impl(conn)?;
+    let now = Utc::now().to_rfc3339();
+
+    for (position, project) in projects.iter().enumerate() {
+        conn.execute(
+            "UPDATE projects SET position = ?, updated_at = ? WHERE id = ?",
+            rusqlite::params![position as i32, now, project.id],
+        )?;
+    }
+
+    Ok(())
 }
 
 /// 设置当前项目
