@@ -1,7 +1,7 @@
-# ZeTodo - 现代化看板任务管理工具
+# 船长待办 - 现代化看板任务管理工具
 
 <div align="center">
-  <img src="index.png" alt="ZeTodo 界面预览" width="800">
+  <img src="index.png" alt="船长待办界面预览" width="800">
 </div>
 
 <div align="center">
@@ -16,7 +16,7 @@
   </p>
 </div>
 
-一个本地优先的桌面看板任务管理工具，支持多项目管理、拖拽排序、卡片详情编辑和 SQLite 持久化。前端基于 React + TypeScript，桌面端由 Tauri + Rust 提供本地能力。
+船长待办是一个本地优先的桌面看板任务管理工具，支持多项目管理、拖拽排序、卡片详情编辑和 SQLite 持久化。前端基于 React + TypeScript，桌面端由 Tauri + Rust 提供本地能力。
 
 ## 核心功能
 
@@ -72,7 +72,7 @@ Web 开发服务器默认运行在 `http://localhost:5173`。
 ## 项目结构
 
 ```
-ZeTodo/
+CaptainTodo/
 ├── src/
 │   ├── App.tsx                    # 主应用组件
 │   ├── main.tsx                   # 应用入口

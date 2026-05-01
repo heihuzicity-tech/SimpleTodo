@@ -6,7 +6,11 @@ pub mod projects;
 mod schema;
 
 use rusqlite::Connection;
-use std::sync::Mutex;
+use std::{
+    path::{Path, PathBuf},
+    sync::Mutex,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tauri::{AppHandle, Manager};
 use thiserror::Error;
 
@@ -47,7 +51,8 @@ pub fn init_database(app_handle: &AppHandle) -> Result<(), DbError> {
     // 确保目录存在
     std::fs::create_dir_all(&app_dir)?;
 
-    let db_path = app_dir.join("zetodo.db");
+    let db_path = app_dir.join("captaintodo.db");
+    migrate_legacy_database_if_needed(&app_dir, &db_path)?;
     log::info!("Database path: {:?}", db_path);
 
     // 打开或创建数据库
@@ -62,6 +67,81 @@ pub fn init_database(app_handle: &AppHandle) -> Result<(), DbError> {
     });
 
     Ok(())
+}
+
+fn migrate_legacy_database_if_needed(app_dir: &Path, db_path: &Path) -> Result<(), DbError> {
+    let Some(legacy_db_path) = legacy_database_path(app_dir) else {
+        return Ok(());
+    };
+
+    if !legacy_db_path.exists() {
+        return Ok(());
+    }
+
+    if !db_path.exists() {
+        std::fs::copy(&legacy_db_path, db_path)?;
+        log::info!(
+            "Migrated legacy database from {:?} to {:?}",
+            legacy_db_path,
+            db_path
+        );
+        return Ok(());
+    }
+
+    if is_bootstrap_database(db_path)? {
+        let backup_path = backup_database_path(db_path);
+        std::fs::rename(db_path, &backup_path)?;
+        std::fs::copy(&legacy_db_path, db_path)?;
+        log::info!(
+            "Replaced bootstrap database with legacy database from {:?}; backup saved at {:?}",
+            legacy_db_path,
+            backup_path
+        );
+    }
+
+    Ok(())
+}
+
+fn legacy_database_path(app_dir: &Path) -> Option<PathBuf> {
+    let app_support_dir = app_dir.parent()?;
+    Some(app_support_dir.join("com.zetodo.app").join("zetodo.db"))
+}
+
+fn backup_database_path(db_path: &Path) -> PathBuf {
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .unwrap_or(0);
+    db_path.with_extension(format!("db.bootstrap-{}.bak", timestamp))
+}
+
+fn is_bootstrap_database(db_path: &Path) -> Result<bool, DbError> {
+    let conn = Connection::open(db_path)?;
+
+    if !table_exists(&conn, "projects")? {
+        return Ok(true);
+    }
+
+    let project_count: i64 = conn.query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))?;
+    if project_count > 1 {
+        return Ok(false);
+    }
+
+    if !table_exists(&conn, "cards")? {
+        return Ok(true);
+    }
+
+    let card_count: i64 = conn.query_row("SELECT COUNT(*) FROM cards", [], |row| row.get(0))?;
+    Ok(card_count == 0)
+}
+
+fn table_exists(conn: &Connection, table_name: &str) -> Result<bool, DbError> {
+    let exists: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+        [table_name],
+        |row| row.get(0),
+    )?;
+    Ok(exists > 0)
 }
 
 /// 使用数据库连接执行操作

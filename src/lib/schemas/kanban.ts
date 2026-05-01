@@ -65,6 +65,7 @@ export const ProjectSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, '项目名称不能为空'),
   description: z.string().optional(),
+  position: z.number().int().min(0),
   createdAt: z.union([z.date(), z.string()]),
   updatedAt: z.union([z.date(), z.string()]),
 });

@@ -32,7 +32,40 @@ pub fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
     if current_version < 2 {
         migrate_v2(conn)?;
     }
+    if current_version < 3 {
+        migrate_v3(conn)?;
+    }
 
+    Ok(())
+}
+
+/// V3 迁移: 为项目添加排序字段
+fn migrate_v3(conn: &Connection) -> Result<(), rusqlite::Error> {
+    log::info!("Running migration V3...");
+
+    conn.execute(
+        "ALTER TABLE projects ADD COLUMN position INTEGER DEFAULT 0",
+        [],
+    )?;
+
+    conn.execute(
+        "UPDATE projects
+         SET position = (
+             SELECT COUNT(*)
+             FROM projects AS newer_projects
+             WHERE newer_projects.created_at > projects.created_at
+         )",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_projects_position ON projects(position)",
+        [],
+    )?;
+
+    conn.execute("INSERT INTO schema_version (version) VALUES (3)", [])?;
+
+    log::info!("Migration V3 completed");
     Ok(())
 }
 
@@ -148,16 +181,10 @@ fn migrate_v2(conn: &Connection) -> Result<(), rusqlite::Error> {
     )?;
 
     // 添加 start_date 字段
-    conn.execute(
-        "ALTER TABLE cards ADD COLUMN start_date TEXT",
-        [],
-    )?;
+    conn.execute("ALTER TABLE cards ADD COLUMN start_date TEXT", [])?;
 
     // 添加 due_date 字段
-    conn.execute(
-        "ALTER TABLE cards ADD COLUMN due_date TEXT",
-        [],
-    )?;
+    conn.execute("ALTER TABLE cards ADD COLUMN due_date TEXT", [])?;
 
     // 更新版本
     conn.execute("INSERT INTO schema_version (version) VALUES (2)", [])?;

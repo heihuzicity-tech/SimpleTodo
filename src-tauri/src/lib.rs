@@ -1,16 +1,14 @@
-// ZeTodo - Tauri 后端入口
+// 船长待办 - Tauri 后端入口
 // 四层架构: Commands -> Services -> DB
 
 mod commands;
 mod db;
 
-use tauri::Manager as _;
-
 /// 获取应用版本信息
 #[tauri::command]
 fn get_app_info() -> serde_json::Value {
     serde_json::json!({
-        "name": "ZeTodo",
+        "name": "船长待办",
         "version": env!("CARGO_PKG_VERSION"),
         "description": env!("CARGO_PKG_DESCRIPTION"),
     })
@@ -54,6 +52,7 @@ pub fn run() {
             commands::projects::create_project,
             commands::projects::update_project,
             commands::projects::delete_project,
+            commands::projects::reorder_projects,
             commands::projects::get_current_project,
             commands::projects::set_current_project,
         ])

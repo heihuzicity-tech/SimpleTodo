@@ -8,6 +8,7 @@ function fromBackendProject(data: Record<string, unknown>): Project {
     id: data.id as string,
     name: data.name as string,
     description: data.description as string | undefined,
+    position: data.position as number,
     createdAt: new Date(data.createdAt as string),
     updatedAt: new Date(data.updatedAt as string),
   };
@@ -27,6 +28,7 @@ export const projectsApi = {
       id: project.id || '',
       name: project.name,
       description: project.description || null,
+      position: project.position ?? 0,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     };
@@ -42,6 +44,7 @@ export const projectsApi = {
       id: project.id,
       name: project.name,
       description: project.description || null,
+      position: project.position,
       createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
       updatedAt: new Date().toISOString(),
     };
@@ -65,5 +68,13 @@ export const projectsApi = {
   /** 设置当前项目 */
   async setCurrent(projectId: string): Promise<void> {
     await invoke('set_current_project', { projectId });
+  },
+
+  /** 按当前列表顺序保存项目排序 */
+  async reorder(projectIds: string[]): Promise<Project[]> {
+    const result = await invoke<Record<string, unknown>[]>('reorder_projects', {
+      projectIds,
+    });
+    return result.map(fromBackendProject);
   },
 };
