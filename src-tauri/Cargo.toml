@@ -1,6 +1,6 @@
 [package]
 name = "captaintodo"
-version = "0.1.0"
+version = "0.2.0"
 description = "船长待办 - 本地优先的看板式任务管理桌面应用"
 authors = ["heihuzicity"]
 license = "MIT"
